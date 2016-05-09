@@ -72,10 +72,11 @@ rotateMatrixC([X|Q], M) :- rotateMatrixC(Q, RQ), rotateVectorC(X, RX), concateMa
 % B = [[2,2,3,1,2,2],[1,3,1,3,1,3],[3,1,2,2,3,1],[2,3,1,3,1,2],[2,1,3,1,3,2],[1,3,2,2,1,3]]
 % 
 % yes
-defineBoardSouth([[2, 3, 1, 2, 2, 3], [2, 1, 3, 1, 3, 1], [1, 3, 2, 3, 1, 2], [3, 1, 2, 1, 3, 2], [2, 3, 1, 3, 1, 3], [2, 1, 3, 2, 2, 1]]).
-defineBoardWest(B) :- defineBoardSouth(C), rotateMatrixAC(C, B).
-defineBoardNorth(B) :- defineBoardWest(C), rotateMatrixAC(C, B).
-defineBoardEast(B) :- defineBoardSouth(C), rotateMatrixC(C, B).
+:- dynamic(board/1).
+board([[2, 3, 1, 2, 2, 3], [2, 1, 3, 1, 3, 1], [1, 3, 2, 3, 1, 2], [3, 1, 2, 1, 3, 2], [2, 3, 1, 3, 1, 3], [2, 1, 3, 2, 2, 1]]).
+defineBoardWest :- board(C), rotateMatrixAC(C, B), retract(board(C)), asserta(board(B)).
+defineBoardNorth :- defineBoardWest, board(C), rotateMatrixAC(C, B), retract(board(C)), asserta(board(B)).
+defineBoardEast :- board(C), rotateMatrixC(C, B), retract(board(C)), asserta(board(B)).
 
 
 % Dust:
@@ -84,21 +85,24 @@ defineBoardEast(B) :- defineBoardSouth(C), rotateMatrixC(C, B).
 % defineBoardEast([[2, 2, 3, 1, 2, 2], [1, 3, 1, 3, 1, 3], [3, 1, 2, 2, 3, 1], [2, 3, 1, 3, 1, 2], [2, 1, 3, 1, 3, 2], [1, 3, 2, 2, 1, 3]]).
 
 
-% Position definition: we should modify it
-definePositions([['', '', '', '', '', ''], ['', '', '', '', '', ''], ['', '', '', '', '', ''], ['', '', '', '', '', ''], ['', '', '', '', '', ''], ['', '', '', '', '', '']]).
+% Position definition:
+:- dynamic(red_at/2).
+:- dynamic(ocre_at/2).
+% On utilisera asserta et assertz pour discriminer la Khalista et les sbires (la Khalista sera en tête de la base de fait, et les sbires en queue).
+r_khalista(X, Y) :- red_at(X, Y), !. %Idée
 
 
 % Choice of the side of the player
 % Use:
-% | ?- sideChoice(e, B).
+% | ?- sideChoice(e).
 % 
 % B = [[2,2,3,1,2,2],[1,3,1,3,1,3],[3,1,2,2,3,1],[2,3,1,3,1,2],[2,1,3,1,3,2],[1,3,2,2,1,3]]
 % 
 % yes
-sideChoice(n, B) :- defineBoardNorth(B).
-sideChoice(s, B) :- defineBoardSouth(B).
-sideChoice(o, B) :- defineBoardWest(B).
-sideChoice(e, B) :- defineBoardEast(B).
+sideChoice(n) :- defineBoardNorth.
+sideChoice(s). % Default board
+sideChoice(o) :- defineBoardWest.
+sideChoice(e) :- defineBoardEast.
 
 
 % Displays a line of the board (with pieces)
@@ -200,3 +204,15 @@ initBoard(B, P) :- write('Sélectionner votre position (n/s/o/e) :'), read(Playe
 % 
 % yes
 getPosition(I, J) :- read(I), read(J), I >= 1, I =< 6, J >= 1, J =< 6. 
+
+
+% We get a piece in the position board
+% Use: 
+% | ?- pieceAt(1, 4, [[2,2,3,1,2,2],[1,3,1,3,1,3],[3,1,2,2,3,1],[2,3,1,3,1,2],[2,1,3,1,3,2],[1,3,2,2,1,3]], E).
+% 
+% E = 1
+% 
+% yes
+pieceAt(1, 1, [H|_], H) :- !.
+pieceAt(1, J, [H|_], E) :- pieceAt(J, 1, H, E), !.
+pieceAt(I, J, [_|Q], E) :- IPrime is I - 1, pieceAt(IPrime, J, Q, E).
