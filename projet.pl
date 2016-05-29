@@ -17,7 +17,8 @@ concate([T|Q], L, [T|R]) :- concate(Q, L, R).
 % 
 % yes
 rotateVectorAC([], []) :- !.
-rotateVectorAC([X|Q], T) :- rotateVectorAC(Q, T1), concate(T1, [[X]], T). 
+rotateVectorAC([X|Q], T) :-	rotateVectorAC(Q, T1), 
+							concate(T1, [[X]], T). 
 
 
 % 90 degree clockwise vector rotation
@@ -28,7 +29,8 @@ rotateVectorAC([X|Q], T) :- rotateVectorAC(Q, T1), concate(T1, [[X]], T).
 % 
 % yes
 rotateVectorC([], []) :- !.
-rotateVectorC([X|Q], T) :- rotateVectorC(Q, T1), concate([[X]], T1, T). 
+rotateVectorC([X|Q], T) :-	rotateVectorC(Q, T1), 
+							concate([[X]], T1, T). 
 
 
 % Concatenation of two matrices
@@ -40,7 +42,9 @@ rotateVectorC([X|Q], T) :- rotateVectorC(Q, T1), concate([[X]], T1, T).
 concateMatrix([], [], []) :- !.
 concateMatrix(X1, [], X1) :- !.
 concateMatrix([], X1, X1) :- !.
-concateMatrix([X1|X2], [Y1|Y2], M) :- concateMatrix(X2, Y2, M2), concate(X1, Y1, L1), concate([L1], M2, M).
+concateMatrix([X1|X2], [Y1|Y2], M) :-	concateMatrix(X2, Y2, M2), 
+										concate(X1, Y1, L1), 
+										concate([L1], M2, M).
 
 
 % 90 degree anticlockwise square matrix rotation
@@ -51,7 +55,9 @@ concateMatrix([X1|X2], [Y1|Y2], M) :- concateMatrix(X2, Y2, M2), concate(X1, Y1,
 % 
 % yes
 rotateMatrixAC([], []) :- !.
-rotateMatrixAC([X|Q], M) :- rotateMatrixAC(Q, RQ), rotateVectorAC(X, RX), concateMatrix(RX, RQ, M).
+rotateMatrixAC([X|Q], M) :-	rotateMatrixAC(Q, RQ), 
+							rotateVectorAC(X, RX), 
+							concateMatrix(RX, RQ, M).
 
 
 % 90 degree clockwise square matrix rotation
@@ -62,7 +68,9 @@ rotateMatrixAC([X|Q], M) :- rotateMatrixAC(Q, RQ), rotateVectorAC(X, RX), concat
 % 
 % yes
 rotateMatrixC([], []) :- !.
-rotateMatrixC([X|Q], M) :- rotateMatrixC(Q, RQ), rotateVectorC(X, RX), concateMatrix(RQ, RX, M).
+rotateMatrixC([X|Q], M) :-	rotateMatrixC(Q, RQ), 
+							rotateVectorC(X, RX), 
+							concateMatrix(RQ, RX, M).
 
 
 % Defininition of the board linked to the side of the player
@@ -73,10 +81,27 @@ rotateMatrixC([X|Q], M) :- rotateMatrixC(Q, RQ), rotateVectorC(X, RX), concateMa
 % 
 % yes
 :- dynamic(board/1).
-board([[2, 3, 1, 2, 2, 3], [2, 1, 3, 1, 3, 1], [1, 3, 2, 3, 1, 2], [3, 1, 2, 1, 3, 2], [2, 3, 1, 3, 1, 3], [2, 1, 3, 2, 2, 1]]).
-defineBoardWest :- board(C), rotateMatrixAC(C, B), retract(board(C)), asserta(board(B)).
-defineBoardNorth :- defineBoardWest, board(C), rotateMatrixAC(C, B), retract(board(C)), asserta(board(B)).
-defineBoardEast :- board(C), rotateMatrixC(C, B), retract(board(C)), asserta(board(B)).
+board([
+		[2, 3, 1, 2, 2, 3], 
+		[2, 1, 3, 1, 3, 1], 
+		[1, 3, 2, 3, 1, 2], 
+		[3, 1, 2, 1, 3, 2], 
+		[2, 3, 1, 3, 1, 3], 
+		[2, 1, 3, 2, 2, 1]
+]).
+defineBoardWest :- 	board(C), 
+					rotateMatrixAC(C, B), 
+					retract(board(C)), 
+					asserta(board(B)).
+defineBoardNorth :-	defineBoardWest, 
+					board(C), 
+					rotateMatrixAC(C, B), 
+					retract(board(C)), 
+					asserta(board(B)).
+defineBoardEast :- 	board(C), 
+					rotateMatrixC(C, B), 
+					retract(board(C)), 
+					asserta(board(B)).
 
 
 % Dust:
@@ -112,7 +137,11 @@ sideChoice(e) :- defineBoardEast.
 % 
 % yes
 print1D([], []).
-print1D([TBoard|QBoard], [TPos|QPos]) :- write(TBoard), write('/'), write(TPos), write(' '), print1D(QBoard, QPos).
+print1D([TBoard|QBoard], [TPos|QPos]) :-	write(TBoard), 
+											write('/'), 
+											write(TPos), 
+											write(' '), 
+											print1D(QBoard, QPos).
 
 
 % Displays the board and the players pieces
@@ -123,7 +152,9 @@ print1D([TBoard|QBoard], [TPos|QPos]) :- write(TBoard), write('/'), write(TPos),
 % 
 % yes
 print2D([], []).
-print2D([TBoard|QBoard], [TPos|QPos]) :- print1D(TBoard, TPos), nl, print2D(QBoard, QPos). 
+print2D([TBoard|QBoard], [TPos|QPos]) :-	print1D(TBoard, TPos), 
+											nl, 
+											print2D(QBoard, QPos). 
 
 
 % Displays the board and the players pieces (based on the side of the player)
@@ -137,10 +168,18 @@ print2D([TBoard|QBoard], [TPos|QPos]) :- print1D(TBoard, TPos), nl, print2D(QBoa
 % 2/ 1/ 3/ 2/ 2/ 1/ 
 % 
 % yes
-printBoard(n, B, P) :- rotateMatrixC(B, BPrime), rotateMatrixC(BPrime, BSecond), rotateMatrixC(P, PPrime), rotateMatrixC(PPrime, PSecond), print2D(BSecond, PSecond).
+printBoard(n, B, P) :-	rotateMatrixC(B, BPrime), 
+						rotateMatrixC(BPrime, BSecond), 
+						rotateMatrixC(P, PPrime), 
+						rotateMatrixC(PPrime, PSecond), 
+						print2D(BSecond, PSecond).
 printBoard(s, B, P) :- print2D(B, P).
-printBoard(o, B, P) :- rotateMatrixC(B, BPrime), rotateMatrixC(P, PPrime), print2D(BPrime, PPrime).
-printBoard(e, B, P) :- rotateMatrixAC(B, BPrime), rotateMatrixAC(P, PPrime), print2D(BPrime, PPrime).
+printBoard(o, B, P) :-	rotateMatrixC(B, BPrime), 
+						rotateMatrixC(P, PPrime), 
+						print2D(BPrime, PPrime).
+printBoard(e, B, P) :-	rotateMatrixAC(B, BPrime), 
+						rotateMatrixAC(P, PPrime), 
+						print2D(BPrime, PPrime).
 
 
 % Read a one dimension list: we will probably not use it
@@ -152,8 +191,20 @@ printBoard(e, B, P) :- rotateMatrixAC(B, BPrime), rotateMatrixAC(P, PPrime), pri
 % 2.
 % 
 % T = [1,2] ?
-read1D(J, N, T) :- J < N, write(J), write(') Entrez un nombre :'), nl, NewJ is J + 1, read(X), read1D(NewJ, N, Y), concate([X], Y, T).
-read1D(J, N, T) :- J =:= N, write(J), write(') Entrez un nombre :'), nl, read(X), T = [X].
+read1D(J, N, T) :-	J < N, 
+					write(J), 
+					write(') Entrez un nombre :'), 
+					nl, 
+					NewJ is J + 1, 
+					read(X), 
+					read1D(NewJ, N, Y), 
+					concate([X], Y, T).
+read1D(J, N, T) :-	J =:= N, 
+					write(J), 
+					write(') Entrez un nombre :'), 
+					nl,
+					read(X), 
+					T = [X].
 
 
 % Read a two dimensions list: we will probably not use it
@@ -171,8 +222,20 @@ read1D(J, N, T) :- J =:= N, write(J), write(') Entrez un nombre :'), nl, read(X)
 % 4.
 % 
 % T = [[1,2],[3,4]] ?
-read2D(I, M, N, T) :- I < M, write('*** Ligne '), write(I), nl, NewI is I + 1, read1D(1, N, Line), read2D(NewI, M, N, Y), concate([Line], Y, T).
-read2D(I, M, N, T) :- I =:= M, write('*** Ligne '), write(I), nl, read1D(1, N, Line), T=[Line].
+read2D(I, M, N, T) :-	I < M, 
+						write('*** Ligne '), 
+						write(I), 
+						nl, 
+						NewI is I + 1, 
+						read1D(1, N, Line), 
+						read2D(NewI, M, N, Y), 
+						concate([Line], Y, T).
+read2D(I, M, N, T) :-	I =:= M, 
+						write('*** Ligne '), 
+						write(I), 
+						nl, 
+						read1D(1, N, Line), 
+						T = [Line].
 
 
 % Initialization of the board: we should modify it
@@ -190,7 +253,11 @@ read2D(I, M, N, T) :- I =:= M, write('*** Ligne '), write(I), nl, read1D(1, N, L
 % P = [['','','','','',''],['','','','','',''],['','','','','',''],['','','','','',''],['','','','','',''],['','','','','','']]
 % 
 % yes
-initBoard(B, P) :- write('Sélectionner votre position (n/s/o/e) :'), read(PlayerPos), sideChoice(PlayerPos, B), definePositions(P), printBoard(PlayerPos, B, P).
+initBoard(B, P) :-	write('Sélectionner votre position (n/s/o/e) :'), 
+					read(PlayerPos), 
+					sideChoice(PlayerPos, B), 
+					definePositions(P), 
+					printBoard(PlayerPos, B, P).
 
 
 % We get a position in the board typed by the user
@@ -203,7 +270,12 @@ initBoard(B, P) :- write('Sélectionner votre position (n/s/o/e) :'), read(Playe
 % J = 6
 % 
 % yes
-getPosition(I, J) :- read(I), read(J), I >= 1, I =< 6, J >= 1, J =< 6. 
+getPosition(I, J) :-	read(I), 
+						read(J), 
+						I >= 1, 
+						I =< 6, 
+						J >= 1, 
+						J =< 6. 
 
 
 % We get a piece in the position board
@@ -214,5 +286,7 @@ getPosition(I, J) :- read(I), read(J), I >= 1, I =< 6, J >= 1, J =< 6.
 % 
 % yes
 pieceAt(1, 1, [H|_], H) :- !.
-pieceAt(1, J, [H|_], E) :- pieceAt(J, 1, H, E), !.
-pieceAt(I, J, [_|Q], E) :- IPrime is I - 1, pieceAt(IPrime, J, Q, E).
+pieceAt(1, J, [H|_], E) :-	pieceAt(J, 1, H, E), 
+							!.
+pieceAt(I, J, [_|Q], E) :-	IPrime is I - 1, 
+							pieceAt(IPrime, J, Q, E).
