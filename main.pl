@@ -42,10 +42,10 @@ defineBoardEast :- 	board(C),
 :- dynamic(redAt/2).
 :- dynamic(ocreAt/2).
 % On utilisera asserta et assertz pour discriminer 
-% la Khalista et les sbires (la Khalista sera en 
+% la Kalista et les sbires (la Kalista sera en 
 % tête de la base de fait, et les sbires en queue).
-redKhalista(X, Y) :- redAt(X, Y), !. % Idea
-ocreKhalista(X, Y) :- ocreAt(X, Y), !. % Idea
+redKalista(X, Y) :- redAt(X, Y), !. % Idea
+ocreKalista(X, Y) :- ocreAt(X, Y), !. % Idea
 
 
 % Choice of the side of the player
@@ -168,10 +168,71 @@ menu :- 	write('1. Humain vs Humain'), nl,
 			read(Choice), nl, choice(Choice),
 			Choice=4, nl.
 
-
 % To manage the choice of the user.
 choice(1) :- write('*** Humain vs Humain ***'), nl, !.
 choice(2) :- write('*** Humain vs Machine ***'), nl, !.
 choice(3) :- write('*** Machine vs Machine ***'), nl, !.
 choice(4) :- write('Au revoir'), !.
 choice(_) :- write('Veuillez sélectionner une option valide.'). 
+
+
+% To enter red pieces at the beginning of the game (interface).
+enterRedPiecesB :- enterPiecesB(1, 6, r).
+
+% To enter ocre pieces at the beginning of the game (interface).
+enterOcrePiecesB :- enterPiecesB(1, 6, o).
+
+% To enter red pieces at the beginning of the game.
+enterPiecesB(1, N, C) :-	repeat, 
+							write('Position Kalista'), 
+							readTestAndStorePostionB(C),
+							enterPiecesB(2, N, C), !.
+enterPiecesB(J, N, C) :-	J < N,
+							repeat,											
+							SbireNumber is J - 1,	 
+							write('Position Sbire '), 
+							write(SbireNumber),
+							readTestAndStorePostionB(C),
+							NewJ is J + 1,
+							enterPiecesB(NewJ, N, C), !.
+enterPiecesB(N, N, C) :-	repeat,				
+							SbireNumber is N - 1,		
+							write('Position Sbire '), write(SbireNumber),
+							readTestAndStorePostionB(C).
+
+% To read, test and perhaps store a piece position 
+% typed by a user at the beginning of the game.
+readTestAndStorePostionB(C) :-	readPostionB(X, Y),
+								isValidAndStorePositionB(X, Y, C).
+
+% To read a piece position 
+readPostionB(X, Y) :- 	nl,
+						write('Ligne (x.) : '),
+						read(X), 
+						write('Colonne (y.) : '),
+						read(Y), 
+						nl.
+
+% To test the validity of a red piece position at the 
+% beginning of the game and perhaps store it.
+isValidAndStorePositionB(X, Y, r) :-	\+ redAt(X, Y), 
+										\+ ocreAt(X, Y), 
+										X >= 5, 
+										X =< 6, 
+										Y >= 1, 
+										Y =< 6,
+										assertz((redAt(X, Y))).
+
+% To test the validity of an ocre piece position at the 
+% beginning of the game and perhaps store it.
+isValidAndStorePositionB(X, Y, o) :-	\+ redAt(X, Y), 
+										\+ ocreAt(X, Y), 
+										X >= 1, 
+										X =< 2, 
+										Y >= 1, 
+										Y =< 6,
+										assertz((ocreAt(X, Y))).
+
+
+% To clean the positions at the end of the game.
+cleanPositions :- retractall(redAt(_,_)), retractall(ocreAt(_,_)).
