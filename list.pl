@@ -79,4 +79,4 @@ union([H|T], L, [H|R]) :- \+element(H, L), union(T, L, R).
 
 intersection([], _, []).
 intersection([H|T], L, [H|R]) :- element(H, L), intersection(T, L, R), !.
-intersection([H|T], L, R) :- \+element(H, L), intersection(T, L, R).
+intersection([H|T], L, R) :- \+element(H, L), intersection(T, L, R).			

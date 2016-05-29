@@ -142,3 +142,36 @@ possibleMoves(o, PossibleMoveList).
 
 generateMove(r, Move).
 generateMove(o, Move).
+
+
+% To start the game.
+% Use:
+% | ?- start.
+% 1) Humain vs Humain
+% 2) Humain vs Machine
+% 3) Machine vs Machine
+% 4) Bye
+% Veuillez saisir votre choix : (1/2/3/4)
+% 4.
+% 
+% Au revoir
+% 
+% yes
+start :- repeat, menu, !.
+
+% To display the menu and manage the choice the user.
+menu :- 	write('1. Humain vs Humain'), nl,
+			write('2. Humain vs Machine'), nl,
+			write('3. Machine vs Machine'), nl,
+			write('4. Bye'), nl,
+			write('Veuillez saisir votre choix : (1.|2.|3.|4.)'), nl,
+			read(Choice), nl, choice(Choice),
+			Choice=4, nl.
+
+
+% To manage the choice of the user.
+choice(1) :- write('*** Humain vs Humain ***'), nl, !.
+choice(2) :- write('*** Humain vs Machine ***'), nl, !.
+choice(3) :- write('*** Machine vs Machine ***'), nl, !.
+choice(4) :- write('Au revoir'), !.
+choice(_) :- write('Veuillez sélectionner une option valide.'). 
