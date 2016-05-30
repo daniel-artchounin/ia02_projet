@@ -41,6 +41,8 @@ defineBoardEast :- 	board(C),
 % Pieces position definition:
 :- dynamic(redAt/2).
 :- dynamic(ocreAt/2).
+:- dynamic(khanAt/2).
+
 % On utilisera asserta et assertz pour discriminer 
 % la Kalista et les sbires (la Kalista sera en 
 % tête de la base de fait, et les sbires en queue).
@@ -58,6 +60,17 @@ sideChoice(n) :- defineBoardNorth.
 sideChoice(o) :- defineBoardWest.
 sideChoice(e) :- defineBoardEast.
 
+printPiece(X, Y) :- redKalista(I, J), X=I, Y=J, write('KR'), !. 
+printPiece(X, Y) :- redAt(X, Y), write('SR'), !. 
+printPiece(X, Y) :- ocreKalista(I, J), X=I, Y=J, write('KO'), !. 
+printPiece(X, Y) :- ocreAt(X, Y), write('SO'), !. 
+printPiece(_, _) :- write('  ').
+
+printKhan(X, Y) :- khanAt(X, Y), write('*'), !.
+printKhan(_, _) :- write(' ').
+
+print2D :- board(B), print2D(B, 1, 1).
+
 
 % Displays a line of the board (with pieces)
 % Use:
@@ -65,12 +78,14 @@ sideChoice(e) :- defineBoardEast.
 % 1/a 2/r 
 % 
 % yes
-print1D([], []).
-print1D([TBoard|QBoard], [TPos|QPos]) :-	write(TBoard), 
-											write('/'), 
-											write(TPos), 
-											write(' '), 
-											print1D(QBoard, QPos).
+print1D([], _, _).
+print1D([TBoard|QBoard], I, J) :-	write(TBoard), 
+									write('/'), 									 
+									printPiece(I, J),
+									printKhan(I, J),									
+									write(' '),
+									NewJ is J + 1,
+									print1D(QBoard, I, NewJ).
 
 
 % Displays the board and the players pieces
@@ -80,10 +95,11 @@ print1D([TBoard|QBoard], [TPos|QPos]) :-	write(TBoard),
 % 3/c 4/d 
 % 
 % yes
-print2D([], []).
-print2D([TBoard|QBoard], [TPos|QPos]) :-	print1D(TBoard, TPos), 
-											nl, 
-											print2D(QBoard, QPos). 
+print2D([], _, _).
+print2D([TBoard|QBoard], I, J) :- 	print1D(TBoard, I, J), 
+									nl, 
+									NewI is I + 1,
+									print2D(QBoard, NewI, J). 
 
 
 % Initialization of the board: we should modify it
@@ -136,12 +152,6 @@ pieceAt(1, J, [H|_], E) :-	pieceAt(J, 1, H, E),
 							!.
 pieceAt(I, J, [_|Q], E) :-	IPrime is I - 1, 
 							pieceAt(IPrime, J, Q, E).
-
-possibleMoves(r, PossibleMoveList).
-possibleMoves(o, PossibleMoveList).
-
-generateMove(r, Move).
-generateMove(o, Move).
 
 
 % To start the game.
@@ -235,4 +245,62 @@ isValidAndStorePositionB(X, Y, o) :-	\+ redAt(X, Y),
 
 
 % To clean the positions at the end of the game.
-cleanPositions :- retractall(redAt(_,_)), retractall(ocreAt(_,_)).
+cleanPositions :- retractall(redAt(_,_)), retractall(ocreAt(_,_)), retractall(khanAt(_,_)).
+
+myPrint2([]).
+myPrint2([(X,Y,XNew,YNew)|Q]) :- write(X), write('*'), write(Y), write('*'), write(XNew), write('*'), write(YNew), nl, myPrint2(Q).
+
+getRedPieces(RedPieces) :- setof((X,Y,X,Y,[]), redAt(X, Y), RedPieces).
+getOcrePieces(OcrePieces) :- setof((X,Y,X,Y,[]), ocreAt(X, Y), OcrePieces). 
+
+possibleRedMoves :-	getRedPieces(RedPieces), 
+					possibleMoves(RedPieces, F, 1, 3), myPrint2(F). % We should manage the number of possible steps and correct a last step problem
+possibleOcreMoves :-	getOcrePieces(OcrePieces),
+						possibleMoves(OcrePieces, F, 1, 3).  % We should manage the number of possible steps and correct a last step problem
+
+isValidNotLastMove(X, Y, H) :- 	\+ redAt(X, Y),
+								\+ ocreAt(X, Y),
+								isValidHistoryMove(X, Y, H).
+								
+isValidHistoryMove(X, Y, H) :-	X =< 6,
+								X >= 1,
+								Y =< 6,
+								Y >= 1,
+								\+ element((X, Y), H).
+	
+getElement([T|_], T).
+getElement([_|Q], X) :- getElement(Q, X).
+
+getMoves(X, Y, XPrime, YPrime) :- 	XPrime is X + 1,  
+									YPrime is Y.
+getMoves(X, Y, XPrime, YPrime) :- 	XPrime is X - 1,  
+									YPrime is Y.
+getMoves(X, Y, XPrime, YPrime) :- 	XPrime is X, 
+									YPrime is Y + 1. 
+getMoves(X, Y, XPrime, YPrime) :- 	XPrime is X, 
+									YPrime is Y - 1.
+
+getValidMove(Moves, XOld,YOld, X, Y, H, XNew, YNew) :-	getElement(Moves, (XOld,YOld,X,Y,H)),
+														getMoves(X, Y, XNew, YNew),
+														isValidNotLastMove(XNew, YNew, H).
+
+getValidLastMove(Moves, XOld,YOld, XNew, YNew) :-	getElement(Moves, (XOld,YOld,X,Y,H)),
+													getMoves(X, Y, XNew, YNew),
+													isValidHistoryMove(XNew, YNew, H).
+
+possibleMoves(Moves, FinalMoves, N, N) :-	setof(
+												(XOld,YOld,XPrime,YPrime), 
+												getValidLastMove(Moves, XOld, YOld, XPrime, YPrime), 
+												FinalMoves
+											), !.
+
+possibleMoves(Moves, FinalMoves, J, N) :- 	setof(
+												(XOld,YOld,XPrime,YPrime,[(X,Y)|H]), 
+												getValidMove(Moves, XOld, YOld, X, Y, H, XPrime, YPrime), 
+												PossibleMoves
+											), 
+											JNew is J+1,
+											possibleMoves(PossibleMoves, FinalMoves, JNew, N).
+
+generateMove(r, Move).
+generateMove(o, Move).
