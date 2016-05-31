@@ -80,16 +80,3 @@ printBoard(o, B, P) :-	rotateMatrixC(B, BPrime),
 printBoard(e, B, P) :-	rotateMatrixAC(B, BPrime), 
 						rotateMatrixAC(P, PPrime), 
 						print2D(BPrime, PPrime).
-
-
-% To do some tests with the possible moves...
-myPrint2([]).
-myPrint2([(X,Y,XNew,YNew)|Q]) :-	write(X), 
-									write('*'), 
-									write(Y), 
-									write(' || '), 
-									write(XNew), 
-									write('*'), 
-									write(YNew), 
-									nl, 
-									myPrint2(Q).

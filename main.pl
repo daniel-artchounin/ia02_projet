@@ -252,7 +252,7 @@ myPrint2([(X,Y,XNew,YNew)|Q]) :-	write(X),
 									myPrint2(Q).
 
 
-% To ge the read pieces possible moves
+% To get the red pieces possible moves
 % Use:
 % | ?- possibleRedMoves.
 % 5*1 || 3*1
@@ -278,7 +278,7 @@ possibleRedMoves :-	getRedPieces(RedPieces1, 1),
 					concate(F1, F2, F3, F),
 					myPrint2(F).
 
-% To ge the read pieces possible moves
+% To get the ocre pieces possible moves
 % Use:
 % | ?- possibleOcreMoves.   
 % 2*1 || 1*1
@@ -380,7 +380,7 @@ isValidHistoryMove(X, Y, H) :-	X =< 6,
 								\+ element((X, Y), H).
 
 
-% To get all the element in a list
+% To get all the elements in a list
 % Use:
 % | ?- getElement([1,2,3], X).
 % 
@@ -421,13 +421,13 @@ getMoves(X, Y, XNew, YNew) :- 	XNew is X,
 getMoves(X, Y, XNew, YNew) :- 	XNew is X, 
 								YNew is Y - 1.
 
-% To get all specific not last moves from a place of the board:
+% To get all specific not last valid moves from a place of the board:
 % it is used in the 'possibleMoves' predicate
 getValidMove(Moves, XOld, YOld, X, Y, H, XNew, YNew) :-	getElement(Moves, (XOld,YOld,X,Y,H)),
 														getMoves(X, Y, XNew, YNew),
 														isValidNotLastMove(XNew, YNew, H).
 
-% To get all specific last moves from a place of the board:
+% To get all specific last valid moves from a place of the board:
 % it is used in the 'possibleMoves' predicate
 getValidLastMove(C, Moves, XOld, YOld, XNew, YNew) :-	getElement(Moves, (XOld,YOld,X,Y,H)),
 														getMoves(X, Y, XNew, YNew),
