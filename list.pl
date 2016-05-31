@@ -31,6 +31,16 @@ times(X, [X|Q], NB) :- times(X, Q, N), NB is N + 1, !.
 times(X, [_|Q], NB) :- times(X, Q, NB).
 
 
+% To concatenate 3 lists
+% Use:
+% | ?- concate([1,2], [3,4], [5,6], L).
+% 
+% L = [1,2,3,4,5,6]
+% 
+% yes
+concate(X, Y, Z, L) :- 	concate(X, Y, XY), 
+						concate(XY, Z, L).
+
 concate([], L, L).
 concate([T|Q], L, [T|R]) :- concate(Q, L, R).
 
