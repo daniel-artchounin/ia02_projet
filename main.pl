@@ -43,6 +43,7 @@ defineBoardEast :- 	board(C),
 :- dynamic(redAt/2).
 :- dynamic(ocreAt/2).
 :- dynamic(khanAt/2).
+:- dynamic(endOfGame/0).
 
 % To get the position of the kalistas
 redKalista(X, Y) :- redAt(X, Y), !.
@@ -83,7 +84,11 @@ printKhan(_, _) :- write(' ').
 % 2/    1/    3/    2/    2/    1/    
 % 
 % yes
-printBoard :- board(B), print2D(B, 1, 1).
+printBoard :- 	write('* Plateau *'),
+				nl, 
+				board(B), 
+				print2D(B, 1, 1),
+				nl.
 
 
 % Displays a line of the board (with pieces):
@@ -120,10 +125,20 @@ print2D([TBoard|QBoard], I, J) :- 	print1D(TBoard, I, J),
 % 
 % yes
 % 
-initBoard :-	write('Sélectionner votre position (n./s./o./e.) : '), 
-				read(PlayerPos), 
-				sideChoice(PlayerPos), 
-				printBoard.
+initBoard :- 	printBoard,
+				write('* Orientation du tapis selon le choix du joueur ROUGE *'),
+				nl,
+				write('Position (n./s./o./e.) : '), 
+				read(PlayerPos),
+				nl,
+				initBoard(PlayerPos).
+
+initBoard(PlayerPos) :-	write('* Sélection du bord '),
+						write(PlayerPos),
+						write(' par le joueur ROUGE *'),
+						nl,
+						sideChoice(PlayerPos), 
+						printBoard.
 
 
 % We get type of a place in the position board (1, 2 or 3)
@@ -165,23 +180,63 @@ menu :- 	write('1. Humain vs Humain'), nl,
 			write('2. Humain vs Machine'), nl,
 			write('3. Machine vs Machine'), nl,
 			write('4. Bye'), nl,
-			write('Veuillez saisir votre choix : (1.|2.|3.|4.)'), nl,
-			read(Choice), nl, choice(Choice),
+			write('Veuillez saisir votre choix (1.|2.|3.|4.) : '),
+			read(Choice), nl, 
+			choice(Choice),
 			Choice=4, nl.
 
 % To manage the choice of the user.
-choice(1) :- write('*** Humain vs Humain ***'), nl, !.
+choice(1) :- 	write('*** Humain vs Humain ***'), 
+				nl, 
+				initBoard,				
+				enterRedPiecesB,
+			 	enterOcrePiecesB,
+				oneTurn,	
+				cleanPositions,
+				!.
 choice(2) :- write('*** Humain vs Machine ***'), nl, !.
 choice(3) :- write('*** Machine vs Machine ***'), nl, !.
 choice(4) :- write('Au revoir'), !.
 choice(_) :- write('Veuillez sélectionner une option valide.'). 
 
 
+oneTurn :- 	repeat,			
+			printBoard,
+			redPlayerTurn,
+			ocrePlayerTurn,
+			endOfGame.
+
+redPlayerTurn :- 	endOfGame, 
+					!.
+redPlayerTurn :-	write('* Joueur ROUGE *'),
+					nl,
+					printBoard,				
+					possibleRedMoves(M),
+					write('Pion à déplacer (X,Y). : '),
+					readPostion(XOld, YOld),
+					write('Emplacement final du pion (X,Y). : '),
+					readPostion(XNew, YNew).
+
+ocrePlayerTurn :- 	endOfGame, 
+					!.
+ocrePlayerTurn :- 	write('* Joueur OCRE *'),
+					nl,
+					printBoard,
+					possibleOcreMoves(M),
+					write('Pion à déplacer (X,Y). : '),
+					readPostion(XOld, YOld),
+					write('Emplacement final du pion (X,Y). : '),
+					readPostion(XNew, YNew).
+
 % To enter red pieces at the beginning of the game (interface).
-enterRedPiecesB :- enterPiecesB(1, 6, r).
+enterRedPiecesB :- 	write('* Pose initiale des six pièces du joueur ROUGE *'),
+					nl,
+					enterPiecesB(1, 6, r).
 
 % To enter ocre pieces at the beginning of the game (interface).
-enterOcrePiecesB :- enterPiecesB(1, 6, o).
+enterOcrePiecesB :- write('* Pose initiale des six pièces du joueur OCRE *'),
+					nl,
+					enterPiecesB(1, 6, o).
 
 % To enter red pieces at the beginning of the game.
 enterPiecesB(1, N, C) :-	repeat, 
@@ -207,11 +262,11 @@ enterPiecesB(J, N, C) :-	repeat,
 
 % To read, test and perhaps store a piece position 
 % typed by a user at the beginning of the game.
-readTestAndStorePostionB(C) :-	readPostionB(X, Y),
+readTestAndStorePostionB(C) :-	readPostion(X, Y),
 								isValidAndStorePositionB(X, Y, C).
 
 % To read a piece position 
-readPostionB(X, Y) :- 	nl,
+readPostion(X, Y) :- 	nl,
 						write('Ligne (x.) : '),
 						read(X), 
 						write('Colonne (y.) : '),
@@ -263,20 +318,20 @@ myPrint2([(X,Y,XNew,YNew)|Q]) :-	write(X),
 % 5*6 || 6*5
 % 
 % yes
-possibleRedMoves :-	khanAt(X, Y),
-					typeOfPlace(X, Y, KP),
-					getRedPieces(RedPieces, KP), 
-					possibleMoves(r, RedPieces, F, 1, KP), 
-					myPrint2(F), 
+possibleRedMoves(F) :- 	khanAt(X, Y),
+						typeOfPlace(X, Y, KP),
+						getRedPieces(RedPieces, KP), 
+						possibleMoves(r, RedPieces, F, 1, KP), 
+						myPrint2(F), 
 					!.
-possibleRedMoves :-	getRedPieces(RedPieces1, 1), 
-					possibleMoves(r, RedPieces1, F1, 1, 1), 
-					getRedPieces(RedPieces2, 2), 
-					possibleMoves(r, RedPieces2, F2, 1, 2), 
-					getRedPieces(RedPieces3, 3), 
-					possibleMoves(r, RedPieces3, F3, 1, 3), 
-					concate(F1, F2, F3, F),
-					myPrint2(F).
+possibleRedMoves(F) :-		getRedPieces(RedPieces1, 1), 
+						possibleMoves(r, RedPieces1, F1, 1, 1), 
+						getRedPieces(RedPieces2, 2), 
+						possibleMoves(r, RedPieces2, F2, 1, 2), 
+						getRedPieces(RedPieces3, 3), 
+						possibleMoves(r, RedPieces3, F3, 1, 3), 
+						concate(F1, F2, F3, F),
+						myPrint2(F).
 
 % To get the ocre pieces possible moves
 % Use:
@@ -289,13 +344,13 @@ possibleRedMoves :-	getRedPieces(RedPieces1, 1),
 % 2*5 || 3*5
 % 
 % yes
-possibleOcreMoves :-	khanAt(X, Y),
+possibleOcreMoves(F) :-	khanAt(X, Y),
 						typeOfPlace(X, Y, KP),
 						getOcrePieces(OcrePieces, KP),
 						possibleMoves(o, OcrePieces, F, 1, KP), 
 						myPrint2(F), 
 						!.
-possibleOcreMoves :-	getOcrePieces(OcrePieces1, 1), 
+possibleOcreMoves(F) :-	getOcrePieces(OcrePieces1, 1), 
 						possibleMoves(o, OcrePieces1, F1, 1, 1), 
 						getOcrePieces(OcrePieces2, 2), 
 						possibleMoves(o, OcrePieces2, F2, 1, 2), 
