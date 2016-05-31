@@ -62,11 +62,11 @@ sideChoice(e) :- defineBoardEast.
 
 
 % To print a piece: it is used in the 'print1D' predicate
-printPiece(X, Y) :- redKalista(I, J), X=I, Y=J, write('KR'), !. 
-printPiece(X, Y) :- redAt(X, Y), write('SR'), !. 
-printPiece(X, Y) :- ocreKalista(I, J), X=I, Y=J, write('KO'), !. 
-printPiece(X, Y) :- ocreAt(X, Y), write('SO'), !. 
-printPiece(_, _) :- write('  ').
+printPiece(X, Y) :- redKalista(I, J), X=I, Y=J, write('(KR)'), !. 
+printPiece(X, Y) :- redAt(X, Y), write('(SR)'), !. 
+printPiece(X, Y) :- ocreKalista(I, J), X=I, Y=J, write('(KO)'), !. 
+printPiece(X, Y) :- ocreAt(X, Y), write('(SO)'), !. 
+printPiece(_, _) :- write('    ').
 
 
 % To print the Khan: it is used in the 'print1D' predicate
@@ -84,8 +84,8 @@ printKhan(_, _) :- write(' ').
 % 2/    1/    3/    2/    2/    1/    
 % 
 % yes
-printBoard :- 	write('* Plateau *'),
-				nl, 
+printBoard :- 	write('    | 1      2      3      4      5      6'), nl,
+			  	write('----|------------------------------------------'), nl,
 				board(B), 
 				print2D(B, 1, 1),
 				nl.
@@ -94,10 +94,9 @@ printBoard :- 	write('* Plateau *'),
 % Displays a line of the board (with pieces):
 % it is used in the 'print2D' predicate
 print1D([], _, _).
-print1D([TBoard|QBoard], I, J) :-	write(TBoard), 
-									write('/'), 									 
-									printPiece(I, J),
-									printKhan(I, J),									
+print1D([TBoard|QBoard], I, J) :-	write(TBoard),
+									printKhan(I, J),								 
+									printPiece(I, J),									
 									write(' '),
 									NewJ is J + 1,
 									print1D(QBoard, I, NewJ).
@@ -106,7 +105,8 @@ print1D([TBoard|QBoard], I, J) :-	write(TBoard),
 % Displays the board and the players pieces:
 % it is used in the 'printBoard' predicate
 print2D([], _, _).
-print2D([TBoard|QBoard], I, J) :- 	print1D(TBoard, I, J), 
+print2D([TBoard|QBoard], I, J) :- 	write(' '), write(I), write('  | '),
+									print1D(TBoard, I, J), 
 									nl, 
 									NewI is I + 1,
 									print2D(QBoard, NewI, J). 
@@ -467,14 +467,10 @@ getElement([_|Q], X) :- getElement(Q, X).
 % YNew = 1
 % 
 % yes
-getMoves(X, Y, XNew, YNew) :- 	XNew is X + 1,  
-								YNew is Y.
-getMoves(X, Y, XNew, YNew) :- 	XNew is X - 1,  
-								YNew is Y.
-getMoves(X, Y, XNew, YNew) :- 	XNew is X, 
-								YNew is Y + 1. 
-getMoves(X, Y, XNew, YNew) :- 	XNew is X, 
-								YNew is Y - 1.
+getMoves(X, Y, XNew, Y) :- 	XNew is X + 1.  
+getMoves(X, Y, XNew, Y) :- 	XNew is X - 1.  
+getMoves(X, Y, X, YNew) :-  YNew is Y + 1. 
+getMoves(X, Y, X, YNew) :- 	YNew is Y - 1.
 
 % To get all specific not last valid moves from a place of the board:
 % it is used in the 'possibleMoves' predicate
