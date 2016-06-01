@@ -211,17 +211,31 @@ choice(1) :- 	write('*** Humain vs Humain ***'),
 				oneTurn, % To manage every turn of the game
 				cleanAll, % To clean pieces
 				!.
-choice(2) :- write('*** Humain vs Machine ***'), nl, !.
+choice(2) :- 	write('*** Humain vs Machine ***'), 
+				nl,
+				initBoard,
+				enterRedPiecesB,
+				machineEnterOcrePiecesB,
+				redPlayerFirstTurn,
+				machineOcrePlayerFirstTurn,
+				oneHumanVsMachineTurn, % To manage every turn of the game
+				cleanAll, % To clean pieces
+				!.
 choice(3) :- write('*** Machine vs Machine ***'), nl, !.
 choice(4) :- write('Au revoir'), !.
 choice(_) :- write('Veuillez sélectionner une option valide.'). 
 
 % To manage one turn of the human vs human mode
-oneTurn :- 	repeat,			
-			printBoard,
+oneTurn :- 	repeat,	
 			redPlayerTurn, % To manage the red player turn
 			ocrePlayerTurn, % To manage the ocre player turn
 			endOfGame.
+
+% To manage one turn of the human vs machine mode
+oneHumanVsMachineTurn :-	repeat,	
+							redPlayerTurn, % To manage the red player turn
+							machineOcrePlayerTurn, % To manage the ocre player (machine) turn
+							endOfGame.
 
 
 % To get a valid move from the user
@@ -246,12 +260,14 @@ verificationNewSbire(X, Y) :-	write('* Emplacement du nouveau sbire *'),
 insertNewSbire(r) :-	repeat,
 						verificationNewSbire(X, Y),
 						assertz((redAt(X, Y))),
-						updateKhan(X, Y).
+						updateKhan(X, Y),
+						printBoard.
 % To insert a new ocre sbire.
 insertNewSbire(o) :- 	repeat,
 						verificationNewSbire(X, Y),
 						assertz((ocreAt(X, Y))),
-						updateKhan(X, Y).
+						updateKhan(X, Y),
+						printBoard.
 
 
 % To update the position of the Khan
@@ -303,13 +319,20 @@ changeOcrePiecePosition(X, Y) :-	assertz((ocreAt(X, Y))), % No ocre piece is los
 
 % To manage the red player first turn
 redPlayerFirstTurn :- 	write('** Joueur ROUGE **'),
+						nl,
+						printBoard,	
 						possibleRedMoves(M, 2),
 						typeValidMove(X, Y, XNew, YNew, M), 
 						retractall(redAt(X,Y)), % We erase the piece selected by the user
-						changeRedPiecePosition(XNew, YNew).
+						changeRedPiecePosition(XNew, YNew),
+						writeMove(X, Y, XNew, YNew),
+						printBoard.
 
 % To manage the ocre player first turn
 ocrePlayerFirstTurn :- ocrePlayerTurn.
+
+% To manage the ocre player (machine) first turn
+machineOcrePlayerFirstTurn :- machineOcrePlayerTurn.
 
 % To manage the choice of the red player when no piece could be moved
 changePositionOrNewSbire(C) :- 	repeat,
@@ -324,7 +347,7 @@ changePositionOrNewSbire(C) :- 	repeat,
 								nl,
 								managePositionOrNewSbire(Choice, C).
 							
-managePositionOrNewSbire(1, r) :- 	write('* Déplacement de pièce sur une case de type différent de celle du KHAN  *'), 
+managePositionOrNewSbire(1, r) :- 	write('* Déplacement de pièce sur une case de type différent de celle du KHAN *'), 
 									nl, 
 									clearKhan,
 									printBoard,
@@ -332,13 +355,15 @@ managePositionOrNewSbire(1, r) :- 	write('* Déplacement de pièce sur une case 
 									typeValidMove(X, Y, XNew, YNew, M), 
 									retractall(redAt(X,Y)), % We erase the piece selected by the user
 									changeRedPiecePosition(XNew, YNew),
+									writeMove(X, Y, XNew, YNew),
+									printBoard,
 									!.
 managePositionOrNewSbire(2, r) :- 	insertNewSbire(r),
 									!.
 managePositionOrNewSbire(_, r) :- 	write('Veuillez sélectionner une option valide.'),
 									fail. 
 
-managePositionOrNewSbire(1, o) :- 	write('* Déplacement de pièce sur une case de type différent de celle du KHAN  *'), 
+managePositionOrNewSbire(1, o) :- 	write('* Déplacement de pièce sur une case de type différent de celle du KHAN *'), 
 									nl,
 									clearKhan,
 									printBoard, 
@@ -346,6 +371,8 @@ managePositionOrNewSbire(1, o) :- 	write('* Déplacement de pièce sur une case 
 									typeValidMove(X, Y, XNew, YNew, M),
 									retractall(ocreAt(X,Y)), % We erase the piece selected by the user
 									changeOcrePiecePosition(XNew, YNew),
+									writeMove(X, Y, XNew, YNew),
+									printBoard,
 									!.
 managePositionOrNewSbire(2, o) :- 	insertNewSbire(o),
 									!.
@@ -357,12 +384,12 @@ getRedPieces(RedPieces) :-	setof(
 									(X,Y), 
 									redAt(X, Y), 
 									RedPieces
-								),
-								!.
+							),
+							!.
 getRedPieces([]).
 
 % We get all the ocre pieces
-getOcrePieces(OcrePieces) :- setof(
+getOcrePieces(OcrePieces) :-	setof(
 									(X,Y), 
 									ocreAt(X, Y), 
 									OcrePieces
@@ -382,8 +409,10 @@ redPlayerTurn :-	write('** Joueur ROUGE **'), % A piece could be moved
 					typeValidMove(X, Y, XNew, YNew, M), 
 					retractall(redAt(X,Y)), % We erase the piece selected by the user
 					changeRedPiecePosition(XNew, YNew),
+					writeMove(X, Y, XNew, YNew),
+					printBoard,
 					!.
-redPlayerTurn :-	getOcrePieces(P), % No piece could be moved
+redPlayerTurn :-	getRedPieces(P), % No piece could be moved 
 					myLength(L, P),
 					L \= 6,
 					changePositionOrNewSbire(r),
@@ -401,13 +430,60 @@ ocrePlayerTurn :- 	write('** Joueur OCRE **'), % A piece could be moved
 					typeValidMove(X, Y, XNew, YNew, M),
 					retractall(ocreAt(X,Y)), % We erase the piece selected by the user
 					changeOcrePiecePosition(XNew, YNew),
+					writeMove(X, Y, XNew, YNew),
+					printBoard,
 					!.
-ocrePlayerTurn :-	getRedPieces(P), % No piece could be moved  
+ocrePlayerTurn :-	getOcrePieces(P), % No piece could be moved  
 					myLength(L, P),
 					L \= 6,
 					changePositionOrNewSbire(o),
 					!.
-ocrePlayerTurn :-	managePositionOrNewSbire(1, o).	
+ocrePlayerTurn :-	managePositionOrNewSbire(1, o).
+
+
+machineOcrePlayerTurn :- 	endOfGame, % The game is finish
+							!.
+machineOcrePlayerTurn :-	write('** Joueur OCRE **'), % A piece could be moved
+							nl,
+							printBoard,
+							possibleOcreMoves(Moves, 1),
+							\+ empty(Moves),
+							generateMove(o, Moves, (X,Y,XNew,YNew)),
+							retractall(ocreAt(X,Y)), % We erase the piece selected by the user
+							changeOcrePiecePosition(XNew, YNew),
+							writeMove(X, Y, XNew, YNew),
+							printBoard,
+							!.
+machineOcrePlayerTurn :-	getOcrePieces(P), % No piece could be moved  
+							myLength(L, P),
+							L \= 6,
+							machineManagePosition(o),
+							!.
+machineOcrePlayerTurn :-	machineManagePosition(o).
+
+
+machineManagePosition(r) :- 	write('* Déplacement de pièce sur une case de type différent de celle du KHAN  *'), 
+								nl, 
+								clearKhan,								
+								possibleRedMoves(Moves, 2),
+								generateMove(o, Moves, (X,Y,XNew,YNew)), 
+								writeMove(X, Y, XNew, YNew),
+								retractall(redAt(X,Y)), % We erase the piece of the machine
+								changeOcrePiecePosition(XNew, YNew),
+								printBoard,
+								!.
+
+writeMove(X, Y, XNew, YNew) :-	write('('), 
+								write(X), 
+								write(', '), 
+								write(Y), 
+								write(') --> ('), 
+								write(XNew), 
+								write(', '), 
+								write(YNew), 
+								write(')'),
+								nl.
+
 
 % To enter red pieces at the beginning of the game (interface).
 enterRedPiecesB :- 	write('* Pose initiale des six pièces du joueur ROUGE *'),
@@ -418,6 +494,36 @@ enterRedPiecesB :- 	write('* Pose initiale des six pièces du joueur ROUGE *'),
 enterOcrePiecesB :- write('* Pose initiale des six pièces du joueur OCRE *'),
 					nl,
 					enterPiecesB(1, 6, o).
+
+% To enter ocre pieces at the beginning of the game (interface).
+machineEnterOcrePiecesB :-	write('* Pose initiale des six pièces du joueur OCRE *'),
+							nl,
+							machineEnterPiecesB(1, 6, o).
+
+machineEnterPiecesB(1, N, C) :-	repeat, 
+								write('Position Kalista'), 
+								writePosition(1, 1),
+								isValidAndStorePositionB(1, 1, C),
+								printBoard,
+								machineEnterPiecesB(2, N, C), 
+								!.
+machineEnterPiecesB(N, N, C) :-	repeat,				
+								SbireNumber is N - 1,		
+								write('Position Sbire '), 
+								write(SbireNumber),
+								writePosition(1, N),
+								isValidAndStorePositionB(1, N, C),
+								printBoard,				
+								!.
+machineEnterPiecesB(J, N, C) :-	repeat,											
+								SbireNumber is J - 1,	 
+								write('Position Sbire '), 
+								write(SbireNumber),
+								writePosition(1, 1),
+								isValidAndStorePositionB(1, J, C),
+								printBoard,
+								NewJ is J + 1,
+								machineEnterPiecesB(NewJ, N, C).
 
 
 % To enter red pieces at the beginning of the game.
@@ -443,10 +549,20 @@ enterPiecesB(J, N, C) :-	repeat,
 							NewJ is J + 1,
 							enterPiecesB(NewJ, N, C).
 
+
 % To read, test and perhaps store a piece position 
 % typed by a user at the beginning of the game.
 readTestAndStorePostionB(C) :-	readPostion(X, Y),
 								isValidAndStorePositionB(X, Y, C).
+
+% To write a piece position 
+writePosition(X, Y) :- 	nl,
+						write('Ligne (x.) : '),
+						write(X), 
+						nl,
+						write('Colonne (y.) : '),
+						write(Y), 
+						nl.
 
 % To read a piece position 
 readPostion(X, Y) :- 	nl,
@@ -686,8 +802,8 @@ possibleMoves(_, _, [], _, _).
 
 
 
-generateMove(r, Move). % Comming soon...
-generateMove(o, Move). % Comming soon...
+generateMove(r, Moves, BestMove) :- first(Moves, BestMove). % To be improved ...
+generateMove(o, Moves, BestMove) :- first(Moves, BestMove). % To be improved ...
 
 
 % To clean the positions at the end of the game.

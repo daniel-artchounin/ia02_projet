@@ -7,6 +7,9 @@ head(T, [T|_]).
 tail(Q, [_|Q]). 
 
 
+first([H|_], H).
+
+
 empty([]).
 
 
