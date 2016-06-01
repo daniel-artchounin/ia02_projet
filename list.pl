@@ -1,6 +1,20 @@
 % *** The predicates below allow us to manipulate lists. ***
 
 
+% To get all the elements in a list
+% Use:
+% | ?- getElement([1,2,3], X).
+% 
+% X = 1 ? ;
+% 
+% X = 2 ? ;
+% 
+% X = 3 ? ;
+% 
+% no
+getElement([T|_], T).
+getElement([_|Q], X) :- getElement(Q, X).
+
 head(T, [T|_]). 
 
 
