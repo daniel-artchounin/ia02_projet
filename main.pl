@@ -289,47 +289,65 @@ updateKhan(X, Y) :-	clearKhan,
 					assertz((khanAt(X, Y))).
 						
 
+% To update the position of a piece
+updatePosition(XOld, YOld, XNew, YNew, r) :-	redKalista(I, J),
+												retractall(redAt(XOld,YOld)),
+												XOld=I, 
+												YOld=J, 
+												asserta((redAt(XNew, YNew))),
+												!.
+updatePosition(_, _, XNew, YNew, r) :-	assertz((redAt(XNew, YNew))).
+
+updatePosition(XOld, YOld, XNew, YNew, o) :-	ocreKalista(I, J),
+												retractall(ocreAt(XOld,YOld)),
+												XOld=I, 
+												YOld=J, 
+												asserta((ocreAt(XNew, YNew))),
+												!.
+updatePosition(_, _, XNew, YNew, o) :-	assertz((ocreAt(XNew, YNew))).
+
 % We set the position of a red piece
-changeRedPiecePosition(X, Y) :- ocreKalista(I, J), % The ocre player has lost the game
-								X=I, 
-								Y=J, 
-								retractall((ocreAt(X,Y))),
-								assertz((redAt(X, Y))),
-								assertz(endOfGame),
-								write('*** Bravo joueur Rouge, vous avez GAGNE !!! ***'),
-								nl,
-								nl,
-								nl,
-								updateKhan(X, Y),
-								!. 
-changeRedPiecePosition(X, Y) :- ocreAt(X, Y), % The ocre player has lost a sbire
-								retractall((ocreAt(X,Y))),
-								assertz((redAt(X, Y))),
-								updateKhan(X, Y),
-								!.
-changeRedPiecePosition(X, Y) :- assertz((redAt(X, Y))), % No ocre piece is lost
-								updateKhan(X, Y).
+changeRedPiecePosition(XOld, YOld, XNew, YNew) :-	ocreKalista(I, J), % The ocre player has lost the game
+													XNew=I, 
+													YNew=J, 
+													retractall((ocreAt(XNew,YNew))),
+													updatePosition(XOld, YOld, XNew, YNew, r),													
+													assertz(endOfGame),
+													write('*** Bravo joueur Rouge, vous avez GAGNE !!! ***'),
+													nl,
+													nl,
+													nl,
+													updateKhan(XNew, YNew),
+													!. 
+changeRedPiecePosition(XOld, YOld, XNew, YNew) :-	ocreAt(XNew, YNew), % The ocre player has lost a sbire
+													retractall((ocreAt(XNew,YNew))),
+													updatePosition(XOld, YOld, XNew, YNew, r),
+													updateKhan(XNew, YNew),
+													!.
+changeRedPiecePosition(XOld, YOld, XNew, YNew) :-	updatePosition(XOld, YOld, XNew, YNew, r), % No ocre piece is lost
+													updateKhan(XNew, YNew).
 
 % We set the position of an ocre piece
-changeOcrePiecePosition(X, Y) :- 	redKalista(I, J), % The red player has lost the game
-									X=I, 
-									Y=J, 
-									retractall((redAt(X,Y))),
-									assertz((ocreAt(X, Y))),
-									assertz(endOfGame),
-									write('*** Bravo joueur Ocre, vous avez GAGNE !!! ***'),
-									nl,
-									nl,
-									nl,
-									updateKhan(X, Y),
-									!. 
-changeOcrePiecePosition(X, Y) :- 	redAt(X, Y), % The red player has lost a sbire
-									retractall((redAt(X,Y))),
-									assertz((ocreAt(X, Y))),
-									updateKhan(X, Y),
-									!. 
-changeOcrePiecePosition(X, Y) :-	assertz((ocreAt(X, Y))), % No ocre piece is lost
-									updateKhan(X, Y).
+changeOcrePiecePosition(XOld, YOld, XNew, YNew) :- 	redKalista(I, J), % The red player has lost the game
+													XNew=I, 
+													YNew=J, 
+													retractall((redAt(XNew,YNew))),
+													updatePosition(XOld, YOld, XNew, YNew, o),
+													assertz(endOfGame),
+													write('*** Bravo joueur Ocre, vous avez GAGNE !!! ***'),
+													nl,
+													nl,
+													nl,
+													updateKhan(XNew, YNew),
+													!. 
+changeOcrePiecePosition(XOld, YOld, XNew, YNew) :- 	redAt(XNew, YNew), % The red player has lost a sbire
+													retractall((redAt(XNew,YNew))),
+													updatePosition(XOld, YOld, XNew, YNew, o),
+													updateKhan(XNew, YNew),
+													!. 
+changeOcrePiecePosition(XOld, YOld, XNew, YNew) :-	updatePosition(XOld, YOld, XNew, YNew, o), % No ocre piece is lost
+													updateKhan(XNew, YNew).
+
 
 % To manage the red player first turn
 redPlayerFirstTurn :- 	write('** Joueur ROUGE **'),
@@ -337,8 +355,7 @@ redPlayerFirstTurn :- 	write('** Joueur ROUGE **'),
 						printBoard,	
 						possibleRedMoves(M, 2),
 						typeValidMove(X, Y, XNew, YNew, M), 
-						retractall(redAt(X,Y)), % We erase the piece selected by the user
-						changeRedPiecePosition(XNew, YNew),
+						changeRedPiecePosition(X, Y, XNew, YNew),
 						writeMove(X, Y, XNew, YNew),
 						printBoard.
 
@@ -351,8 +368,7 @@ machineRedPlayerFirstTurn :-	write('** Joueur ROUGE **'),
 								printBoard,						
 								possibleRedMoves(Moves, 2),
 								generateMove(r, Moves, (X,Y,XNew,YNew)),
-								retractall(redAt(X,Y)), % We erase the piece of the machine
-								changeRedPiecePosition(XNew, YNew),
+								changeRedPiecePosition(X, Y, XNew, YNew),
 								writeMove(X, Y, XNew, YNew),
 								printBoard.
 
@@ -378,8 +394,7 @@ managePositionOrNewSbire(1, r) :- 	write('* Déplacement de pièce sur une case 
 									printBoard,
 									possibleRedMoves(M, 2),
 									typeValidMove(X, Y, XNew, YNew, M), 
-									retractall(redAt(X,Y)), % We erase the piece selected by the user
-									changeRedPiecePosition(XNew, YNew),
+									changeRedPiecePosition(X, Y, XNew, YNew),
 									writeMove(X, Y, XNew, YNew),
 									printBoard,
 									!.
@@ -394,8 +409,7 @@ managePositionOrNewSbire(1, o) :- 	write('* Déplacement de pièce sur une case 
 									printBoard, 
 									possibleOcreMoves(M, 2),
 									typeValidMove(X, Y, XNew, YNew, M),
-									retractall(ocreAt(X,Y)), % We erase the piece selected by the user
-									changeOcrePiecePosition(XNew, YNew),
+									changeOcrePiecePosition(X, Y, XNew, YNew),
 									writeMove(X, Y, XNew, YNew),
 									printBoard,
 									!.
@@ -432,8 +446,7 @@ redPlayerTurn :-	write('** Joueur ROUGE **'), % A piece could be moved
 					possibleRedMoves(M, 1),
 					\+ empty(M),
 					typeValidMove(X, Y, XNew, YNew, M), 
-					retractall(redAt(X,Y)), % We erase the piece selected by the user
-					changeRedPiecePosition(XNew, YNew),
+					changeRedPiecePosition(X, Y, XNew, YNew),
 					writeMove(X, Y, XNew, YNew),
 					printBoard,
 					!.
@@ -453,8 +466,7 @@ ocrePlayerTurn :- 	write('** Joueur OCRE **'), % A piece could be moved
 					possibleOcreMoves(M, 1),
 					\+ empty(M),
 					typeValidMove(X, Y, XNew, YNew, M),
-					retractall(ocreAt(X,Y)), % We erase the piece selected by the user
-					changeOcrePiecePosition(XNew, YNew),
+					changeOcrePiecePosition(X, Y, XNew, YNew),
 					writeMove(X, Y, XNew, YNew),
 					printBoard,
 					!.
@@ -473,8 +485,7 @@ machineRedPlayerTurn :-		write('** Joueur ROUGE **'), % A piece could be moved
 							possibleRedMoves(Moves, 1),
 							\+ empty(Moves),
 							generateMove(r, Moves, (X,Y,XNew,YNew)),
-							retractall(redAt(X,Y)), % We erase the piece selected by the machine
-							changeRedPiecePosition(XNew, YNew),
+							changeRedPiecePosition(X, Y, XNew, YNew),
 							writeMove(X, Y, XNew, YNew),
 							printBoard,
 							!.
@@ -494,8 +505,7 @@ machineOcrePlayerTurn :-	write('** Joueur OCRE **'), % A piece could be moved
 							possibleOcreMoves(Moves, 1),
 							\+ empty(Moves),
 							generateMove(o, Moves, (X,Y,XNew,YNew)),
-							retractall(ocreAt(X,Y)), % We erase the piece selected by the machine
-							changeOcrePiecePosition(XNew, YNew),
+							changeOcrePiecePosition(X, Y, XNew, YNew),
 							writeMove(X, Y, XNew, YNew),
 							printBoard,
 							!.
@@ -513,8 +523,7 @@ machineManagePosition(r) :- 	write('* Déplacement de pièce sur une case de typ
 								possibleRedMoves(Moves, 2),
 								generateMove(r, Moves, (X,Y,XNew,YNew)), 
 								writeMove(X, Y, XNew, YNew),
-								retractall(redAt(X,Y)), % We erase the piece of the machine
-								changeRedPiecePosition(XNew, YNew),
+								changeRedPiecePosition(X, Y, XNew, YNew),
 								printBoard,
 								!.
 
@@ -524,8 +533,7 @@ machineManagePosition(o) :- 	write('* Déplacement de pièce sur une case de typ
 								possibleOcreMoves(Moves, 2),
 								generateMove(o, Moves, (X,Y,XNew,YNew)), 
 								writeMove(X, Y, XNew, YNew),
-								retractall(ocreAt(X,Y)), % We erase the piece of the machine
-								changeOcrePiecePosition(XNew, YNew),
+								changeOcrePiecePosition(X, Y, XNew, YNew),
 								printBoard,
 								!.
 
