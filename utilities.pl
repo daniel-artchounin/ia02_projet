@@ -1,14 +1,17 @@
 % *** The predicates below are some utilities used during the game. ***
 
+% Gestion d'une demande de mouvement pour la machine ou l'humain
+handleMoveRequest(m, _, X, Y, XNew, YNew, M) :- typeValidMove(X, Y, XNew, YNew, M).
+handleMoveRequest(h, C, X, Y, XNew, YNew, M) :- generateMove(C, M, (X, Y, XNew, YNew)).
 
 % To get a valid move from the user
 typeValidMove(XOld, YOld, XNew, YNew, M) :-	repeat,
 											write('* Pion à  déplacer *'),
 											nl,
-											readPostion(XOld, YOld),
+											readPosition(XOld, YOld),
 											write('* Emplacement final du pion *'),
 											nl,
-											readPostion(XNew, YNew),
+											readPosition(XNew, YNew),
 											element((XOld,YOld,XNew,YNew), M).
 
 
@@ -36,7 +39,7 @@ writePosition(X, Y) :- 	nl,
 
 
 % To read a piece position 
-readPostion(X, Y) :- 	nl,
+readPosition(X, Y) :- 	nl,
 						write('Ligne (x.) : '),
 						read(X), 
 						write('Colonne (y.) : '),
@@ -56,6 +59,9 @@ myPrint2([(X,Y,XNew,YNew)|Q]) :-	write(X),
 									nl, 
 									myPrint2(Q).
 
+% Dispatch des mouvements possibles
+possibleMoves(F, N, r) :- possibleRedMoves(F, N).
+possibleMoves(F, N, o) :- possibleOcreMoves(F, N).
 
 % To get the red pieces possible moves
 % Use:
@@ -105,7 +111,7 @@ possibleOcreMoves(F, 2) :-	getOcrePieces(OcrePieces1, 1),
 
 
 % To check if a not last specific move is valid
-isValidNotLastMove(X, Y, H) :- 	noPiecesHere(X, Y),
+isValidNotLastMove(X, Y, H) :- 	\+ pieceAt(X, Y),
 								isValidHistoryMove(X, Y, H).
 
 

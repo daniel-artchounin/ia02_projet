@@ -125,12 +125,5 @@ initBoard(m) :-	printBoard,
 % 
 % yes
 typeOfPlace(I, J, P) :-	board(B),
-						typeOfPlace(I, J, B, P).
-typeOfPlace(1, 1, [H|_], H) :-	\+ myLength(_, H), 
-								!.
-typeOfPlace(1, 1, [H|_], E) :- 	typeOfPlace(1, 1, H, E),
-								!.
-typeOfPlace(1, J, [H|_], E) :-	typeOfPlace(J, 1, H, E), 
-								!.
-typeOfPlace(I, J, [_|Q], E) :-	IPrime is I - 1, 
-								typeOfPlace(IPrime, J, Q, E).
+						nth(I, B, Rows),
+						nth(J, Rows, P).

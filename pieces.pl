@@ -7,23 +7,33 @@
 :- dynamic(khanAt/2).
 :- dynamic(endOfGame/0).
 
-% To get the position of the kalistas
+% To get the position of the kalistas (first position in facts list)
 redKalista(X, Y) :- redAt(X, Y), !.
 ocreKalista(X, Y) :- ocreAt(X, Y), !.
 
+% General predicate to get a Kalista.
+kalista(X, Y, r) :- redKalista(X, Y).
+kalista(X, Y, o) :- ocreKalista(X, Y).
+
+% General predicate to get a piece.
+pieceAt(X, Y) :- redAt(X, Y).
+pieceAt(X, Y) :- ocreAt(X, Y).
+
+% General predicates to insert a new piece / kalista.
+sbireAt(X, Y, r) :- assertz(redAt(X, Y)).
+sbireAt(X, Y, o) :- assertz(ocreAt(X, Y)).
+kalistaAt(X, Y, r) :- asserta(redAt(X, Y)).
+kalistaAt(X, Y, o) :- asserta(ocreAt(X, Y)).
+
 
 % To print a piece: it is used in the 'print1D' predicate
-printPiece(X, Y) :- redKalista(I, J), 
-					X=I, 
-					Y=J, 
+printPiece(X, Y) :- redKalista(X, Y), 
 					write('(KR)'), 
 					!. 
 printPiece(X, Y) :- redAt(X, Y), 
 					write('(SR)'), 
 					!. 
-printPiece(X, Y) :- ocreKalista(I, J), 
-					X=I, 
-					Y=J, 
+printPiece(X, Y) :- ocreKalista(X, Y), 
 					write('(KO)'), 
 					!. 
 printPiece(X, Y) :- ocreAt(X, Y), 
@@ -38,184 +48,82 @@ printKhan(X, Y) :- 	khanAt(X, Y),
 					!.
 printKhan(_, _) :- 	write(' ').
 
-
 % To verify the validity of the emplacement of the new sbire.
 verificationNewSbire(X, Y) :-	write('* Emplacement du nouveau sbire *'),
 								nl,			
-								readPostion(X, Y),
-								noPiecesHere(X, Y).
+								readPosition(X, Y),
+								\+ pieceAt(X, Y).
 
 
-% To insert a new red sbire.
-insertNewSbire(r) :-	repeat,
+% To insert a new sbire.
+insertNewSbire(C) :- 	repeat,
 						verificationNewSbire(X, Y),
-						assertz((redAt(X, Y))),
+						sbireAt(X, Y, C),
 						updateKhan(X, Y),
 						printBoard.
-% To insert a new ocre sbire.
-insertNewSbire(o) :- 	repeat,
-						verificationNewSbire(X, Y),
-						assertz((ocreAt(X, Y))),
-						updateKhan(X, Y),
-						printBoard.
-
 
 % To update the position of the Khan
 updateKhan(X, Y) :-	clearKhan,
-					assertz((khanAt(X, Y))).
+					assertz(khanAt(X, Y)).
 						
 
 % To update the position of a piece
-updatePosition(XOld, YOld, XNew, YNew, r) :-	redKalista(I, J),
-												retractall(redAt(XOld,YOld)),
-												XOld=I, 
-												YOld=J, 
-												asserta((redAt(XNew, YNew))),
+updatePosition(_, _, XNew, YNew, _) :- 	updateKhan(XNew, YNew), % Mise à jour systmétique du Khan et effacement de la pièce d'arrivée
+										clearAt(XNew, YNew). 
+updatePosition(XOld, YOld, XNew, YNew, C) :- 	clearAt(XOld, YOld),  % Déplacement de la Kalista si elle existe
+												kalista(XOld, YOld, C), 
+												kalistaAt(XNew, YNew, C), 
 												!.
-updatePosition(_, _, XNew, YNew, r) :-	assertz((redAt(XNew, YNew))).
+updatePosition(XOld, YOld, XNew, YNew, C) :- 	clearAt(XOld, YOld), % Déplacement du sbire par défaut
+												sbireAt(XNew, YNew, C).
 
-updatePosition(XOld, YOld, XNew, YNew, o) :-	ocreKalista(I, J),
-												retractall(ocreAt(XOld,YOld)),
-												XOld=I, 
-												YOld=J, 
-												asserta((ocreAt(XNew, YNew))),
-												!.
-updatePosition(_, _, XNew, YNew, o) :-	assertz((ocreAt(XNew, YNew))).
+% We set the position of piece
+changePiecePosition(XOld, YOld, XNew, YNew, C) :- 	updatePosition(XOld, YOld, XNew, YNew, C). % Déplacement systématique
+% Cas particuliers complémentaires 
+changePiecePosition(_, _, XNew, YNew, r) :-	ocreKalista(XNew, YNew), % The ocre player has lost the game							
+											assertz(endOfGame),
+											write('*** Bravo joueur Rouge, vous avez GAGNE !!! ***'),
+											nl, nl, nl.
 
-% We set the position of a red piece
-changeRedPiecePosition(XOld, YOld, XNew, YNew) :-	ocreKalista(I, J), % The ocre player has lost the game
-													XNew=I, 
-													YNew=J, 
-													retractall((ocreAt(XNew,YNew))),
-													updatePosition(XOld, YOld, XNew, YNew, r),													
-													assertz(endOfGame),
-													write('*** Bravo joueur Rouge, vous avez GAGNE !!! ***'),
-													nl,
-													nl,
-													nl,
-													updateKhan(XNew, YNew),
-													!. 
-changeRedPiecePosition(XOld, YOld, XNew, YNew) :-	ocreAt(XNew, YNew), % The ocre player has lost a sbire
-													retractall((ocreAt(XNew,YNew))),
-													updatePosition(XOld, YOld, XNew, YNew, r),
-													updateKhan(XNew, YNew),
-													!.
-changeRedPiecePosition(XOld, YOld, XNew, YNew) :-	updatePosition(XOld, YOld, XNew, YNew, r), % No ocre piece is lost
-													updateKhan(XNew, YNew).
-
-% We set the position of an ocre piece
-changeOcrePiecePosition(XOld, YOld, XNew, YNew) :- 	redKalista(I, J), % The red player has lost the game
-													XNew=I, 
-													YNew=J, 
-													retractall((redAt(XNew,YNew))),
-													updatePosition(XOld, YOld, XNew, YNew, o),
-													assertz(endOfGame),
-													write('*** Bravo joueur Ocre, vous avez GAGNE !!! ***'),
-													nl,
-													nl,
-													nl,
-													updateKhan(XNew, YNew),
-													!. 
-changeOcrePiecePosition(XOld, YOld, XNew, YNew) :- 	redAt(XNew, YNew), % The red player has lost a sbire
-													retractall((redAt(XNew,YNew))),
-													updatePosition(XOld, YOld, XNew, YNew, o),
-													updateKhan(XNew, YNew),
-													!. 
-changeOcrePiecePosition(XOld, YOld, XNew, YNew) :-	updatePosition(XOld, YOld, XNew, YNew, o), % No ocre piece is lost
-													updateKhan(XNew, YNew).
+changePiecePosition(_, _, XNew, YNew, o) :- redKalista(XNew, YNew), % The red player has lost the game
+											assertz(endOfGame),
+											write('*** Bravo joueur Ocre, vous avez GAGNE !!! ***'),
+											nl, nl, nl.
 
 
 % To manage the choice of a player when no piece could be moved
 changePositionOrNewSbire(C) :- 	repeat,
-								write('Vous ne pouvez obéir au KHAN.'), 
-								nl,
-								write('1. Déplacer une pièce sur une case de type différent de celle du KHAN'), 
-								nl,
-								write('2. Insérer un nouveau sbire'), 
-								nl,
+								write('Vous ne pouvez pas obéir au KHAN.'), nl,
+								write('1. Déplacer une pièce sur une case de type différent de celui du KHAN'), nl,
+								write('2. Insérer un nouveau sbire'), nl,
 								write('Veuillez saisir votre choix (1.|2.) : '),
-								read(Choice),
-								nl,
-								managePositionOrNewSbire(Choice, C).
-			
-managePositionOrNewSbire(1, r) :- 	write('* Déplacement de pièce sur une case de type différent de celle du KHAN *'), 
-									nl, 
-									clearKhan,
-									printBoard,
-									possibleRedMoves(M, 2),
-									typeValidMove(X, Y, XNew, YNew, M), 
-									changeRedPiecePosition(X, Y, XNew, YNew),
-									writeMove(X, Y, XNew, YNew),
-									printBoard,
-									!.
-managePositionOrNewSbire(2, r) :- 	insertNewSbire(r),
-									!.
-managePositionOrNewSbire(_, r) :- 	write('Veuillez sélectionner une option valide.'),
+								read(Choice), nl,
+								managePositionOrNewSbire(Choice, C, h).
+
+% Déplacement d'une pièce en désobéissant au Khan (humain ou machine)
+% C : couleur
+% T : type de joueur (IA / Humain)
+managePositionOrNewSbire(1, C, T) :-	write('* Déplacement de pièce sur une case de type différent de celui du KHAN *'), nl,
+										printBoard,
+										possiblesMoves(M, 2, C),
+										handleMoveRequest(T, C, X, Y, XNew, YNew, M),
+										changePiecePosition(X, Y, XNew, YNew, C),
+										writeMove(X, Y, XNew, YNew),
+										printBoard,
+										!.
+
+% Insertion d'un nouveau sbire suite à blocage du Khan (humain ou machine)
+% ==================== TODO : Traiter le cas de la machine (T = m) ====================
+managePositionOrNewSbire(2, C, T) :- 	insertNewSbire(C),
+										!.
+managePositionOrNewSbire(_, _) :- 	write('Veuillez sélectionner une option valide.'),
 									fail. 
 
-managePositionOrNewSbire(1, o) :- 	write('* Déplacement de pièce sur une case de type différent de celle du KHAN *'), 
-									nl,
-									clearKhan,
-									printBoard, 
-									possibleOcreMoves(M, 2),
-									typeValidMove(X, Y, XNew, YNew, M),
-									changeOcrePiecePosition(X, Y, XNew, YNew),
-									writeMove(X, Y, XNew, YNew),
-									printBoard,
-									!.
-managePositionOrNewSbire(2, o) :- 	insertNewSbire(o),
-									!.
-managePositionOrNewSbire(_, o) :- 	write('Veuillez sélectionner une option valide.'),
-									fail.
-
-
-% To manage a move from a place which type is different than the place of the KHAN
-machineManagePosition(r) :- 	write('* Déplacement de pièce sur une case de type différent de celle du KHAN  *'), 
-								nl, 
-								clearKhan,								
-								possibleRedMoves(Moves, 2),
-								generateMove(r, Moves, (X,Y,XNew,YNew)), 
-								writeMove(X, Y, XNew, YNew),
-								changeRedPiecePosition(X, Y, XNew, YNew),
-								printBoard,
-								!.
-
-
-% To manage a move from a place which type is different than the place of the KHAN
-machineManagePosition(o) :- 	write('* Déplacement de pièce sur une case de type différent de celle du KHAN  *'), 
-								nl, 
-								clearKhan,								
-								possibleOcreMoves(Moves, 2),
-								generateMove(o, Moves, (X,Y,XNew,YNew)), 
-								writeMove(X, Y, XNew, YNew),
-								changeOcrePiecePosition(X, Y, XNew, YNew),
-								printBoard,
-								!.
-
-
-% To check if there is no piece on a place.
-noPiecesHere(X, Y) :-	\+ redAt(X, Y), 
-			 			\+ ocreAt(X, Y).
-
-
 % We get all the red pieces
-getRedPieces(RedPieces) :-	setof(
-									(X,Y), 
-									redAt(X, Y), 
-									RedPieces
-							),
-							!.
-getRedPieces([]).
-
+getRedPieces(RedPieces) :- setof((X, Y), redAt(X, Y),  RedPieces).
 
 % We get all the ocre pieces
-getOcrePieces(OcrePieces) :-	setof(
-									(X,Y), 
-									ocreAt(X, Y), 
-									OcrePieces
-								),
-								!. 
-getOcrePieces([]).
+getOcrePieces(OcrePieces) :- setof((X,Y), ocreAt(X, Y), OcrePieces).
 
 
 % To make a list of all red pieces on a type of place (1, 2 or 3)

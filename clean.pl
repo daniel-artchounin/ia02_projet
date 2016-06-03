@@ -9,3 +9,7 @@ cleanAll :- 	retractall((redAt(_,_))),
 
 % To clean the Khan.
 clearKhan :- retractall((khanAt(_,_))).
+
+% To clean a specific piece.
+clearAt(X, Y) :- retract(redAt(X, Y)), !.
+clearAt(X, Y) :- retract(ocreAt(X, Y)).
