@@ -57,8 +57,8 @@ sideChoice(e) :- defineBoardEast.
 % 2/    1/    3/    2/    2/    1/    
 % 
 % yes
-printBoard :- 	write('    | 1      2      3      4      5      6'), nl,
-			  	write('----|------------------------------------------'), nl,
+printBoard :- 	nl, write('        1        2        3        4        5        6'), nl,
+			  	write('    +--------+--------+--------+--------+--------+--------+'), nl,
 				board(B), 
 				print2D(B, 1, 1),
 				nl.
@@ -66,11 +66,11 @@ printBoard :- 	write('    | 1      2      3      4      5      6'), nl,
 
 % Displays a line of the board (with pieces):
 % it is used in the 'print2D' predicate
-print1D([], _, _).
+print1D([], _, _) :- nl, write('    +--------+--------+--------+--------+--------+--------+').
 print1D([TBoard|QBoard], I, J) :-	write(TBoard),
 									printKhan(I, J),								 
 									printPiece(I, J),									
-									write(' '),
+									write(' | '),
 									NewJ is J + 1,
 									print1D(QBoard, I, NewJ).
 
@@ -88,13 +88,13 @@ print2D([TBoard|QBoard], I, J) :- 	write(' '),
 
 
 % Initialization of the board by a human
-initBoard(u) :- printBoard,
+initBoard(h) :- printBoard,
 				write('* Orientation du tapis selon le choix du joueur ROUGE *'),
 				nl,
 				write('Position (n./s./o./e.) : '), 
 				read(PlayerPos),
 				nl,
-				write('* Sélection du bord '),
+				write('* Selection du bord '),
 				write(PlayerPos),
 				write(' par le joueur ROUGE *'),
 				nl,
@@ -109,7 +109,7 @@ initBoard(m) :-	printBoard,
 				write('Position (n./s./o./e.) : '), 
 				PlayerPos = s,
 				nl,
-				write('* Sélection du bord '),
+				write('* Selection du bord '),
 				write(PlayerPos),
 				write(' par le joueur ROUGE *'),
 				nl,
@@ -127,3 +127,8 @@ initBoard(m) :-	printBoard,
 typeOfPlace(I, J, P) :-	board(B),
 						nth(I, B, Rows),
 						nth(J, Rows, P).
+
+freePosition1D(X, Y, X1, X2) :- Y =< 6, \+ pieceAt(X, Y), X1 = X, X2 = Y.
+freePosition1D(X, Y, X1, X2) :- Y =< 6, YNew is Y + 1, freePosition1D(X, YNew, X1, X2).
+freePosition(X, Y, X1, X2) :- X =< 6, freePosition1D(X, Y, X1, X2).
+freePosition(X, Y, X1, X2) :- X =< 6, XNew is X + 1, freePosition(XNew, Y, X1, X2).
