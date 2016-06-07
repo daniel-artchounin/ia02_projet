@@ -156,8 +156,11 @@ changePositionOrNewSbire(C, m) :- managePositionOrNewSbire(_, C, m).
 managePositionOrNewSbire(2, C, T) :- 	hSep, 
 										write('* Insertion d\'un nouveau sbire *'), hSep, nl,
 										insertNewSbire(C, T, X, Y),
-										write((X, Y)), nl,
+										write((X, Y)), nl, 
 										!.
+% ******************************************************************************
+% The 'write' above should be improved
+% ******************************************************************************
 
 managePositionOrNewSbire(1, C, T) :-	hSep, 
 										write('* Deplacement de type different de celui du KHAN *'), hSep, nl,
