@@ -11,4 +11,5 @@ cleanAll :- 	retractall((redAt(_,_))),
 clearKhan :- retractall((khanAt(_,_))).
 
 % To clean a specific piece.
-clearAt(X, Y) :- retractall(redAt(X, Y)), retractall(ocreAt(X, Y)).
+clearAt(X, Y) :- 	retractall(redAt(X, Y)), 
+					retractall(ocreAt(X, Y)).

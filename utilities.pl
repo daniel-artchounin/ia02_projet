@@ -1,34 +1,48 @@
 % *** The predicates below are some utilities used during the game. ***
 
-% Gestion d'une demande de mouvement pour la machine ou l'humain
+% Management of a request of move by the human
 handleMoveRequest(h, _, X, Y, XNew, YNew, M) :- typeValidMove(X, Y, XNew, YNew, M).
+% Management of a request of move by the machine
 handleMoveRequest(m, C, X, Y, XNew, YNew, M) :- generateMove(C, M, (X, Y, XNew, YNew)).
 
-% Gestion d'une exception
-% E : exception
-% T : message d'erreur
+% Management of an exception
+% E: exception
+% T: Error message
 handleException(E, T) :- 	write('Erreur : '),
-							write(E), nl,
-							write(T), nl,
+							write(E), 
+							nl,
+							write(T), 
+							nl,
 							fail.
 
-% Player informations.
-playerInfo(r, h) :- hSep, write('**                       Joueur ROUGE                     **'), hSep.
-playerInfo(o, h) :- hSep, write('**                       Joueur OCRE                      **'), hSep.
-playerInfo(r, m) :- hSep, write('**                         IA ROUGE                       **'), hSep.
-playerInfo(o, m) :- hSep, write('**                         IA OCRE                        **'), hSep.
+% Displays player's name and type.
+playerInfo(r, h) :-	hSep, 
+					write('**                       Joueur ROUGE                     **'), 
+					hSep.
+playerInfo(o, h) :-	hSep, 
+					write('**                       Joueur OCRE                      **'), 
+					hSep.
+playerInfo(r, m) :-	hSep, 
+					write('**                         IA ROUGE                       **'), 
+					hSep.
+playerInfo(o, m) :-	hSep, 
+					write('**                         IA OCRE                        **'), 
+					hSep.
 
-hSep :- nl, write('------------------------------------------------------------'), nl.
+% Hozizontal separation
+hSep :-	nl, 
+		write('------------------------------------------------------------'), 
+		nl.
 
 % To get a valid move from the user
-% M : Liste des mouvements possibles.
+% M: List of all possible moves
 typeValidMove(XOld, YOld, XNew, YNew, M) :-	repeat,
 											write('* Pion a deplacer *'), nl,
 											readPosition(XOld, YOld),
 											write('* Emplacement final du pion *'), nl,
 											readPosition(XNew, YNew),
 											element((XOld, YOld, XNew, YNew), M),
-											!. % Cut très important pour le repeat
+											!.
 
 % To write the details of a move in the command line.
 writeMove(X, Y, XNew, YNew) :-	write('Deplacement : ('), 
@@ -43,7 +57,7 @@ writeMove(X, Y, XNew, YNew) :-	write('Deplacement : ('),
 								nl.
 
 
-% To write a piece position 
+% To write a piece position in the command line. 
 writePosition(X, Y) :- 	nl,
 						write('Ligne (x.) : '),
 						write(X), 
@@ -53,7 +67,7 @@ writePosition(X, Y) :- 	nl,
 						nl.
 
 
-% To read a piece position 
+% To read a piece position in the command line.
 readPosition(X, Y) :- 	repeat, nl,
 						write('Ligne (x.) : '),
 						catch(read(X), E, handleException(E, 'Erreur de lecture de la ligne.')),
@@ -63,7 +77,9 @@ readPosition(X, Y) :- 	repeat, nl,
 						!.
 
 
-% To do some tests with the possible moves...
+% ******************************************************************************
+% To do some tests with the possible moves... -> Should be removed of course !!!
+% ******************************************************************************
 myPrint2([]).
 myPrint2([(X,Y,XNew,YNew)|Q]) :-	write(X), 
 									write('*'), 
@@ -77,13 +93,17 @@ myPrint2([(X,Y,XNew,YNew)|Q]) :-	write(X),
 
 
 % To get the possible moves of specific colored player
-possibleMoves(F, 1, C) :-	khanAt(X, Y), % Depending on the Khan position
-							typeOfPlace(X, Y, KP),
-							getPieces(Pieces, C, KP), % Renvoie un ensemble de mouvements des pièces sur elles-mêmes
-							possibleMoves(C, Pieces, F, 1, KP),
+% based on the Khan's position
+possibleMoves(F, 1, C) :-	khanAt(X, Y), 
+							typeOfPlace(X, Y, P), % We get the type of the place of the Khan
+							getPieces(Pieces, C, P), % Returns a list of pieces moves on themselves
+							possibleMoves(C, Pieces, F, 1, P),
 							!.
 
-possibleMoves(F, 2, C) :-	getPieces(P1, C, 1), % Independant of the Khan position : we generate all moves.
+% To get the possible moves of specific colored player
+% not based on the Khan's position:
+% we generate all moves.
+possibleMoves(F, 2, C) :-	getPieces(P1, C, 1),
 							possibleMoves(C, P1, F1, 1, 1),
 							getPieces(P2, C, 2),
 							possibleMoves(C, P2, F2, 1, 2),
@@ -92,14 +112,16 @@ possibleMoves(F, 2, C) :-	getPieces(P1, C, 1), % Independant of the Khan positio
 							concate(F1, F2, R1),
 							concate(R1, F3, F).
 
+
 % To check if a not last specific move is valid
 isValidNotLastMove(X, Y, H) :- 	\+ pieceAt(X, Y), % No piece during the travel
 								isValidHistoryMove(X, Y, H).
 
 
 % To check if a last specific move (for a red piece) is valid
-isValidLastMove(C, X, Y, H) :- 	\+ pieceAt(X, Y, C), % No piece of the color player at the end of travel
+isValidLastMove(C, X, Y, H) :- 	\+ pieceAt(X, Y, C), % No piece of the color of the player at the end of travel
 								isValidHistoryMove(X, Y, H).
+
 
 % To check if a specific move is not already in the history and not out of board bounds.
 isValidHistoryMove(X, Y, H) :-	X =< 6,
@@ -120,25 +142,25 @@ getNextPositions(X, Y, X, YNew) :- 	YNew is Y - 1.
 % it is used in the 'possibleMoves' predicate
 getValidMove(Moves, XOld, YOld, X, Y, H, XNew, YNew) :-	getElement(Moves, (XOld, YOld, X, Y, H)),
 														getNextPositions(X, Y, XNew, YNew),
-														isValidNotLastMove(XNew, YNew, H). % On vérifie que la future position est correcte
+														isValidNotLastMove(XNew, YNew, H). % We verify that the future position is valid
 
 
 % To get all specific last valid moves from a place of the board: (via setof)
 % it is used in the 'possibleMoves' predicate
-getValidLastMove(C, Moves, XOld, YOld, XNew, YNew) :-	getElement(Moves, (XOld, YOld, X, Y, H)), % On récupère un mouvement intermédiaire
-														getNextPositions(X, Y, XNew, YNew), % On récupère une position possible
-														isValidLastMove(C, XNew, YNew, H). % On vérifie qu'elle est valide.
+getValidLastMove(C, Moves, XOld, YOld, XNew, YNew) :-	getElement(Moves, (XOld, YOld, X, Y, H)), % We get an intermediate move
+														getNextPositions(X, Y, XNew, YNew), % We get a possible position
+														isValidLastMove(C, XNew, YNew, H). % We verify that the last move is valid
 
 
 % To make a list of all possible (full) moves from a list of places in the board:
-% it is used in the 'possibleRedMoves' and 'possibleOcreMoves' predicates
-possibleMoves(C, Moves, FinalMoves, N, N) :-	setof( % Dernier mouvement
+% it is used in the other possibleMoves predicate
+possibleMoves(C, Moves, FinalMoves, N, N) :-	setof( % Last move
 													(XOld, YOld, XNew, YNew), 
 													getValidLastMove(C, Moves, XOld, YOld, XNew, YNew), 
 													FinalMoves
 												), 
 												!.
-possibleMoves(C, Moves, FinalMoves, J, N) :- 	setof( % Mouvement intermédiaire
+possibleMoves(C, Moves, FinalMoves, J, N) :- 	setof( % Not last move
 													(XOld, YOld, XNew, YNew, [(X, Y)|H]), 
 													getValidMove(Moves, XOld, YOld, X, Y, H, XNew, YNew), 
 													PossibleMoves
@@ -148,14 +170,16 @@ possibleMoves(C, Moves, FinalMoves, J, N) :- 	setof( % Mouvement intermédiaire
 												!.
 possibleMoves(_, _, [], _, _).
 
-% Predicate to find a way to the opposite Kalista from a list of position : used to insert a sbire (IA).
-findMoveToKalista([(X, Y)|_], X1, Y1, XNew, YNew, C) :-	typeOfPlace(X, Y, KP),
-														otherPlayer(C, C2),
-														possibleMoves(C, [(X, Y, X, Y, [])], F, 1, KP),
-														kalista(XNew, YNew, C2),
-														element((X, Y, XNew, YNew), F),
-														X1 = X, Y1 = Y,
-														!.
-findMoveToKalista([_|T], X1, Y1, XNew, YNew, C) :- 		findMoveToKalista(T, X1, Y1, XNew, YNew, C).
+% Predicate to find a way to the opposite Kalista from a list of position: used to insert a sbire (AI).
+findMoveToKalista([(X, Y)|_], X, Y, C) :-	typeOfPlace(X, Y, P),
+											otherPlayer(C, C2),
+											possibleMoves(C, [(X, Y, X, Y, [])], F, 1, P),
+											kalista(XK, YK, C2),
+											element((X, Y, XK, YK), F),
+											!.
+findMoveToKalista([_|T], X1, Y1, C) :- 		findMoveToKalista(T, X1, Y1, C).
 
-generateMove(C, Moves, BestMove) :- first(Moves, BestMove). % To be improved ...
+% ******************************************************************************
+% To be improved ...
+% ******************************************************************************
+generateMove(_, Moves, BestMove) :- first(Moves, BestMove). 

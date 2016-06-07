@@ -29,6 +29,9 @@ defineBoardEast :- 	board(C),
 					retract(board(C)), 
 					asserta(board(B)).
 
+% ******************************************************************************
+% To be deleted
+% ******************************************************************************
 % Dust: it will be deleted soon
 % defineBoardNorth([[1, 2, 2, 3, 1, 2], [3, 1, 3, 1, 3, 2], [2, 3, 1, 2, 1, 3], [2, 1, 3, 2, 3, 1], [1, 3, 1, 3, 1, 2], [3, 2, 2, 1, 3, 2]]).
 % defineBoardWest([[3, 1, 2, 2, 3, 1], [2, 3, 1, 3, 1, 2], [2, 1, 3, 1, 3, 2], [1, 3, 2, 2, 1, 3], [3, 1, 3, 1, 3, 1], [2, 2, 1, 3, 2, 2]]).
@@ -47,14 +50,23 @@ sideChoice(e) :- defineBoardEast.
 
 
 % Prints the board
-% Use:
-% | ?- printBoard.                           
-% 2/    3/    1/    2/    2/    3/    
-% 2/KO  1/SO  3/SO  1/SO  3/SO  1/SO  
-% 1/    3/    2/    3/    1/    2/    
-% 3/    1/    2/    1/    3/    2/    
-% 2/KR* 3/SR  1/SR  3/SR  1/SR  3/SR  
-% 2/    1/    3/    2/    2/    1/    
+% | ?- printBoard.
+% 
+%         1        2        3        4        5        6
+%     +--------+--------+--------+--------+--------+--------+
+%  1  | 3      | 1      | 2      | 2      | 3      | 1      | 
+%     +--------+--------+--------+--------+--------+--------+
+%  2  | 2      | 3      | 1      | 3      | 1      | 2      | 
+%     +--------+--------+--------+--------+--------+--------+
+%  3  | 2      | 1      | 3      | 1      | 3      | 2      | 
+%     +--------+--------+--------+--------+--------+--------+
+%  4  | 1      | 3      | 2      | 2      | 1      | 3      | 
+%     +--------+--------+--------+--------+--------+--------+
+%  5  | 3      | 1      | 3      | 1      | 3      | 1      | 
+%     +--------+--------+--------+--------+--------+--------+
+%  6  | 2      | 2      | 1      | 3      | 2      | 2      | 
+%     +--------+--------+--------+--------+--------+--------+
+% 
 % 
 % yes
 printBoard :- 	nl, write('        1        2        3        4        5        6'), nl,
@@ -66,7 +78,8 @@ printBoard :- 	nl, write('        1        2        3        4        5        6
 
 % Displays a line of the board (with pieces):
 % it is used in the 'print2D' predicate
-print1D([], _, _) :- nl, write('    +--------+--------+--------+--------+--------+--------+').
+print1D([], _, _) :- 	nl, 
+						write('    +--------+--------+--------+--------+--------+--------+').
 print1D([TBoard|QBoard], I, J) :-	write(TBoard),
 									printKhan(I, J),								 
 									printPiece(I, J),									
@@ -128,7 +141,14 @@ typeOfPlace(I, J, P) :-	board(B),
 						nth(I, B, Rows),
 						nth(J, Rows, P).
 
-freePosition1D(X, Y, X1, X2) :- Y =< 6, \+ pieceAt(X, Y), X1 = X, X2 = Y.
-freePosition1D(X, Y, X1, X2) :- Y =< 6, YNew is Y + 1, freePosition1D(X, YNew, X1, X2).
-freePosition(X, Y, X1, X2) :- X =< 6, freePosition1D(X, Y, X1, X2).
-freePosition(X, Y, X1, X2) :- X =< 6, XNew is X + 1, freePosition(XNew, Y, X1, X2).
+% To get the free positions of the board
+freePosition1D(X, Y, X, Y) :-	Y =< 6, 
+								\+ pieceAt(X, Y).
+freePosition1D(X, Y, X1, X2) :- Y =< 6, 
+								YNew is Y + 1, 
+								freePosition1D(X, YNew, X1, X2).
+freePosition(X, Y, X1, X2) :- 	X =< 6, 
+								freePosition1D(X, Y, X1, X2).
+freePosition(X, Y, X1, X2) :- 	X =< 6, 
+								XNew is X + 1, 
+								freePosition(XNew, Y, X1, X2).
