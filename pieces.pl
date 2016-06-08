@@ -143,11 +143,17 @@ changePositionOrNewSbire(C, h) :- 	repeat,
 									managePositionOrNewSbire(Choice, C, h),
 									!.
 
-% If no piece could be moved and AI has already lost a piece,
-% first, it tries to insert a sbire such as it can find an immediate way to opposite Kalista.
-% If it's not possible, it moves a piece.
-changePositionOrNewSbire(C, m) :- managePositionOrNewSbire(_, C, m).
-
+% If no piece could be moved and AI has already lost a piece.
+% First, it checks if it's possible to hit the kalista by simply moving a piece.
+% If it's not the case, it tries to insert a sbire such as it can find an immediate way to opposite Kalista.
+% If it's also not possible, it moves a piece.
+changePositionOrNewSbire(C, m) :- 	possibleMoves(Moves, 1, C),
+									otherPlayer(C, C2), 
+									kalista(XK, YK, C2),
+									element((_, _, XK, YK), Moves),									
+									managePositionOrNewSbire(1, C, m).
+changePositionOrNewSbire(C, m) :- 	managePositionOrNewSbire(_, C, m),
+									!.
 
 % Move of a piece without obeying to the Khan (human or machine)
 % C : color
