@@ -66,7 +66,6 @@ start(T1, T2) :-	initBoard(T1), % Initialization of the board
 
 % To manage turns until the end of the game.
 turn(T1, T2) :- 	repeat,
-					sleep(1),
 					printBoard,
 					playerInfo(r, T1),
 					playerTurn(r, T1, 1), % Red player turn
@@ -74,7 +73,6 @@ turn(T1, T2) :- 	repeat,
 					playerInfo(o, T2),
 					playerTurn(o, T2, 1), % Ocre player turn
 					endOfGame,
-					printBoard,
 					!.
 
 
@@ -87,11 +85,11 @@ playerTurn(_, _, _) :-	endOfGame, % Game is over.
 % C: color of the player
 % MoveType: 1 if it should obey to the Khan, 2 otherwise
 playerTurn(C, T, MoveType) :-	nl, % Standard move		
-								possibleMoves(M, MoveType, C),
+								possibleMoves(M, MoveType, C, _),
 								\+ empty(M), % Will be empty if MoveType = 1 and no piece can obey to the Khan
 								handleMoveRequest(T, C, X, Y, XNew, YNew, M), 
-								changePiecePosition(X, Y, XNew, YNew, C),
 								writeMove(X, Y, XNew, YNew),
+								changePiecePosition(X, Y, XNew, YNew, C),
 								!.
 
 playerTurn(C, T, _) :- 	getPieces(P, C), % Impossible to obey to the Khan 

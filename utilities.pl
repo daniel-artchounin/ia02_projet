@@ -16,6 +16,7 @@ handleException(E, T) :- 	write('Erreur : '),
 							fail.
 
 % Displays player's name and type.
+playerInfo(_, _) :- endOfGame.	
 playerInfo(r, h) :-	hSep, 
 					write('**                       Joueur ROUGE                     **'), 
 					hSep.
@@ -94,23 +95,25 @@ myPrint2([(X,Y,XNew,YNew)|Q]) :-	write(X),
 
 % To get the possible moves of specific colored player
 % based on the Khan's position
-possibleMoves(F, 1, C) :-	khanAt(X, Y), 
-							typeOfPlace(X, Y, P), % We get the type of the place of the Khan
-							getPieces(Pieces, C, P), % Returns a list of pieces moves on themselves
-							possibleMoves(C, Pieces, F, _, 1, P),
-							!.
+possibleMoves(F, 1, C, H) :-	khanAt(X, Y), 
+								typeOfPlace(X, Y, P), % We get the type of the place of the Khan
+								getPieces(Pieces, C, P), % Returns a list of pieces moves on themselves
+								possibleMoves(C, Pieces, F, H, 1, P),
+								!.
 
 % To get the possible moves of specific colored player
 % not based on the Khan's position:
 % we generate all moves.
-possibleMoves(F, 2, C) :-	getPieces(P1, C, 1),
-							possibleMoves(C, P1, F1, _, 1, 1),
-							getPieces(P2, C, 2),
-							possibleMoves(C, P2, F2, _, 1, 2),
-							getPieces(P3, C, 3),
-							possibleMoves(C, P3, F3, _, 1, 3),
-							concate(F1, F2, R1),
-							concate(R1, F3, F).
+possibleMoves(F, 2, C, H) :-	getPieces(P1, C, 1),
+								possibleMoves(C, P1, F1, H1, 1, 1),
+								getPieces(P2, C, 2),
+								possibleMoves(C, P2, F2, H2, 1, 2),
+								getPieces(P3, C, 3),
+								possibleMoves(C, P3, F3, H3, 1, 3),
+								concate(F1, F2, R1),
+								concate(R1, F3, F),
+								concate(H1, H2, TH1),
+								concate(TH1, H3, H).
 
 
 % To check if a not last specific move is valid
@@ -190,12 +193,12 @@ possibleMoves(_, _, [], [], _, _).
 % It also erase the paths which start at the same place and end at the same place.
 separate5Uples(Moves, FinalMoves, History) :- separate5Uples(Moves, [], [], FinalMoves, History). % Interface: the two temp lists are used to increase efficiency
 separate5Uples([], FinalMoves,  History, FinalMoves, History) :- !.
-separate5Uples([(Xi, Yi, Xf, Yf, H)|QTmpFinalMoves], TmpFinalMoves, TempH, FinalMoves, History) :-	\+ element((Xi, Yi, Xf, Yf), TmpFinalMoves),
-																									separate5Uples(QTmpFinalMoves, [(Xi, Yi, Xf, Yf)|TmpFinalMoves],  [H|TempH], FinalMoves, History),
+separate5Uples([(Xi, Yi, Xf, Yf, H)|QTmpFinalMoves], TmpFinalMoves, TempH, FinalMoves, History) :-	separate5Uples(QTmpFinalMoves, [(Xi, Yi, Xf, Yf)|TmpFinalMoves],  [H|TempH], FinalMoves, History),
 																									!.
 separate5Uples([_|QTmpFinalMoves], TmpFinalMoves, TempH, FinalMoves, History) :-	separate5Uples(QTmpFinalMoves, TmpFinalMoves,  TempH, FinalMoves, History).
 
 % Predicate to find a way to the opposite Kalista using a list of initial position(s): used by AI.
+% C : color which attacks.
 findMoveToKalista([(X, Y)|_], X, Y, C) :-	typeOfPlace(X, Y, P),
 											otherPlayer(C, C2),
 											possibleMoves(C, [(X, Y, X, Y, [])], F, _, 1, P),
@@ -204,136 +207,262 @@ findMoveToKalista([(X, Y)|_], X, Y, C) :-	typeOfPlace(X, Y, P),
 											!.
 findMoveToKalista([_|T], X1, Y1, C) :- 		findMoveToKalista(T, X1, Y1, C).
 
-% Predicate to find a way to an opposite position (XPos, YPos) using a list of initial position(s)
-findMoveToAPosition([(X, Y)|_], X, Y, XPos, YPos, C) :-	typeOfPlace(X, Y, P),
-														typeOfPlace(XPos, YPos, P2),
-														P = P2,
-														possibleMoves(C, [(X, Y, X, Y, [])], F, _, 1, P),
-														element((X, Y, XPos, YPos), F),
-														!.
-findMoveToAPosition([_|T], X1, Y1, XPos, YPos, C) :- findMoveToAPosition(T, X1, Y1, XPos, YPos, C).
+% Iterate over a history of moves (i.e. lists of positions (tuples)) and throw all those which don't lead to the position specified by (X, Y).
+filterHistoryToPos([], [], _, _) :- !. % End of history
+filterHistoryToPos([H|T], [HF|P], X, Y) :- 	flatten(H, HF),
+											myLast((X, Y), H), 
+											filterHistoryToPos(T, P, X, Y),
+											!. % Way found
+filterHistoryToPos([_|T], P, X, Y) :- 		filterHistoryToPos(T, P, X, Y). % Way not found
 
-% ******************************************************************************
-% To be improved ...
-% ******************************************************************************
-% The best move is the one which allow us to take the opposite kalista.
+% This predicate simulate a move and check if our Kalista is ==> immediatly <== (taking Khan into account) in danger.
+isMoveDangerous((XF, YF, XT, YT), C) :- kalista(XF, YF, C), % For Kalista
+										khanAt(X, Y), % Memory of Khan's position
+										(pieceAt(XF, YF) -> Restore = y ; Restore = n), % Should we restore the original position ?
+										moveDangerous((XF, YF, XT, YT, X, Y), C, k, Restore),
+										\+ moveDangerous((XF, YF, XF, YF, X, Y), C, k, Restore), % Here is the important thing : if we find a danger, we check that there is NOT in current state, otherwise the move is not dangerous itself
+										!.
+
+isMoveDangerous((XF, YF, XT, YT), C) :- \+ kalista(XF, YF, C), % For common sbire (important to check)
+										khanAt(X, Y), % Memory of Khan's position
+										(pieceAt(XF, YF) -> Restore = y ; Restore = n), % Should we restore the original position ?
+										moveDangerous((XF, YF, XT, YT, X, Y), C, s, Restore),
+										\+ moveDangerous((XF, YF, XF, YF, X, Y), C, s, Restore), % Here is the important thing : if we find a danger, we check that there is NOT in current state, otherwise the move is not dangerous itself
+										!.
+
+% Internal predicate used by moveDangerous : check if simulated move if dangerous, according Khan situations
+% C : Our color
+% (X, Y) : Final position of our move
+moveDangerousAccordingKhan(C, X, Y) :- 	otherPlayer(C, C2),
+										kalista(XK, YK, C),
+										typeOfPlace(X, Y, P), % Type de place d'arrivée
+										getPiecesOnType(C2Pieces, C2, P), % Pièces adverses sur le même type que la pièce d'arrivée
+										empty(C2Pieces), % Khan doesn't matter
+										possibleMoves(F, 2, C, _), % All opposite moves
+										element((_, _, XK, YK), F), % Yes, the move is dangerous. (indirect move)
+										!.
+
+moveDangerousAccordingKhan(C, X, Y) :- 	otherPlayer(C, C2),
+										typeOfPlace(X, Y, P), % Type de place d'arrivée
+										getPiecesOnType(C2Pieces, C2, P), % Pièces adverses sur le même type que la pièce d'arrivée
+										\+ empty(C2Pieces), % Khan matters
+										findMoveToKalista(C2Pieces, _, _, C2). % Yes, the move is dangerous (direct move)
+
+restorePiece(XF, YF, _, _, C, PT, y) :- setPieceAt(XF, YF, C, PT). % Get piece to its original state.
+restorePiece(_, _, _, _, _, _, n). % Useful for testing insertions ! (piece wasn't on the board)
+
+% Internal predicate used by isMoveDangerous.
+% (XF, YF, XT, YT, KX, KY) : (X initial, Y initial, X final, Y final, X mémoire du Khan, Y mémoire du Khan)
+% C : Our color
+% PT : Kalista ou sbire déplacé ? (k / s)
+% Restore : should we restore the placed piece ? Should be 'y' if we want to => force <= a restore! 
+moveDangerous((XF, YF, XT, YT, KX, KY), C, PT, Restore) :- 	clearAt(XF, YF, C), % We simulate the move
+															setPieceAt(XT, YT, C, PT),
+															updateKhan(XT, YT), 
+															moveDangerousAccordingKhan(C, XT, YT), % Test situation
+															clearAt(XT, YT, C), % Restore the previous state
+															updateKhan(KX, KY),
+															restorePiece(XF, YF, XT, YT, C, PT, Restore),
+															!.
+
+moveDangerous((XF, YF, XT, YT, KX, KY), C, PT, Restore) :- 	clearAt(XT, YT, C), % Cleaning in case of failure.
+															updateKhan(KX, KY),
+															restorePiece(XF, YF, XT, YT, C, PT, Restore),
+															fail.
+
+% Get a estimation a distance to C-Kalista (no matter the validity of way)
+distanceToKalista(X, Y, C, D) :- 	kalista(XK, YK, C),
+									D is (X - XK) * (X - XK) + (Y - YK) * (Y - YK).
+
+% The predicate checks if the other player has sbire on the same case type as (X, Y) and can perform a move from it.
+hasSbireSameType(X, Y, C) :-	otherPlayer(C, C2),
+								getPieces(C2Pieces, C2),
+								typeOfPlace(X, Y, P),
+								getElement(C2Pieces, (XC2, YC2)),
+								typeOfPlace(XC2, YC2, P2),
+								P = P2,
+								possibleMoves(C, [(XC2, YC2, XC2, YC2, [])], F, _, 1, P2),
+								\+ empty(F). % Can the player perform a move from that position ?
+
+% Predicate to find the minimum of a simple nested list based on the first element.
+minimumFirstSubList([X], X).
+minimumFirstSubList([[D1|T1],[D2|T2]|T], N) :- (D1 > D2 -> 
+													minimumFirstSubList([[D2|T2]|T], N)
+												;
+													minimumFirstSubList([[D1|T1]|T], N)
+												).
+
+% I. The best move is the one which allow us to take the opposite kalista.
 generateMove(C, Moves, BestMove) :- otherPlayer(C, C2), 
 									kalista(XK, YK, C2),
 									element((X, Y, XK, YK), Moves),
-									BestMove = (X, Y, XK, YK), 
-% ******************************************************************************
-% Should be removed (just for testing and understanding the choices of AI)
-% ******************************************************************************
-									nl, write(1), nl, 
+									BestMove = (X, Y, XK, YK),
+									nl, write('Job done.'), nl, 
 									!.
-% If it's necessary, we should move our Kalista at a safe place
+
+% II. If our Kalista is threatened by an or several moves, we should try to 
+% move a sbire to block the move. It is a special case as it is unlikely to happen in most situations, but this is the
+% optimal defensive move instead of moving the Kalista.
+generateMove(C, Moves, BestMove) :- otherPlayer(C, C2),
+									getPieces(C2Pieces, C2),
+									findMoveToKalista(C2Pieces, _, _, C2), % Other player has a direct way to our Kalista (no matter what is Khan's position)
+									possibleMoves(_, 2, C2, H), % We get all his possible moves AND moves history
+									kalista(XK, YK, C), % What is the exact position of our Kalista ?
+									filterHistoryToPos(H, R, XK, YK), % Which positions are part of moves which go to our Kalista ?
+									flatten(R, R2), % All positions in a non-nested list
+									getElement(Moves, (XF, YF, XT, YT)), % We get a possible move that we can perform (backtracking will try several positions)
+									XF \= XK,
+									YF \= YK, % We won't block a move with Kalista... see next predicate.
+									memberchk((XT, YT), R2), % Can the move block the way to our Kalista ?
+									\+ isMoveDangerous((XF, YF, XT, YT), C), % Has the blocking been effective ?
+									BestMove = (XF, YF, XT, YT), % If so, we set the blocking.
+									nl, write('Body blocked !'), nl, 
+									!.
+
+% III. If our Kalista is threatened and that the way can't be blocked, we try to move our Kalista to a place where NO opposite sbire could move,
+% ==> regardless of Khan's position <== : optimal move for Kalista.
 generateMove(C, Moves, BestMove) :- otherPlayer(C, C2), 
 									getPieces(C2Pieces, C2), % We get the other player pieces
 									findMoveToKalista(C2Pieces, _, _, C2), % We look if it's possible for him to hit our kalista
-									possibleMoves(F2, 2, C2), % If it's the case, we get all the potential moves of the other user
+									possibleMoves(F2, 2, C2, _), % If it's the case, we get all the potential moves of the other user
 									kalista(XK, YK, C),
 									getElement(Moves, (XK, YK, XDest, YDest)), % We get a move of our kalista
-									print(F2),
-									\+ element((_, _, XDest, YDest), F2), % Then, we check if the other player could hit our kalista at this new position
-									BestMove = (XK, YK, XDest, YDest), % If it's not the case, we will move our kalistha
-% ******************************************************************************
-% Should be removed (just for testing and understanding the choices of AI)
-% ******************************************************************************
-									nl, write(2), nl, 
+									\+ element((_, _, XDest, YDest), F2), % Then, we check if the other player could hit our kalista at this new position (in the future, not especially next turn)
+									BestMove = (XK, YK, XDest, YDest), % If it's not the case, we will move our kalista
+									nl, write('Not today !'), nl, 
 									!.
-% If it's necessary, we should move our Kalista at a safe place only for the next turn
+
+% IV. If our Kalista is threatened, with no sbire blocking possibilities and no global safe place,
+% we try to move our Kalista at a place where no opposite sbire can reach it ==> for the next turn <==, i.e. from a place which has the same type as the future position of Kalista (because of Khan).
+% This is the least optimal defensive move.
 generateMove(C, Moves, BestMove) :- otherPlayer(C, C2), 
 									getPieces(C2Pieces, C2), % We get the other player pieces
 									findMoveToKalista(C2Pieces, _, _, C2), % We look if it's possible for him to hit our kalista
 									kalista(XK, YK, C),
 									getElement(Moves, (XK, YK, XDest, YDest)), % We get a move of our kalista
-									\+ findMoveToAPosition(C2Pieces, _, _, XDest, YDest, C),
-									BestMove = (XK, YK, XDest, YDest), % If it's not the case, we will move our kalistha
-% ******************************************************************************
-% Should be removed (just for testing and understanding the choices of AI)
-% ******************************************************************************
-									nl, write(3), nl, 
+									\+ isMoveDangerous((XK, YK, XDest, YDest), C), % Has the defense been effective ?
+									BestMove = (XK, YK, XDest, YDest), % If it's not the case, we will move our kalista
+									nl, write('Maybe later...'), nl, 
 									!.
-% If we get here, there are two possibilities:
-% We are not able to move our kalista, we will perhaps loose the game
+
+% V. If we get here, there are two possibilities:
+% We are not able to move our kalista, we will probably loose the game, or
 % We don't need to move our kalista (that's cool...)
+% In this case, we try to place a Sbire on a free position which can hit the Kalista in a future turn.
+generateMove(C, Moves, BestMove) :- otherPlayer(C, C2),
+									getPieces(C2Pieces, C2),
+									kalista(XK, YK, C),
+									getElement(Moves, (Xi, Yi, XDest, YDest)), % We get a move
+									\+ getElement([(XK, YK)], (Xi, Yi)), % We tend to not move our kalista
+									\+ getElement(C2Pieces, (XDest, YDest)), % We will try to not hit an opposite sbire
+									findMoveToKalista([(XDest, YDest)], _, _, C), % We look if it's possible for us to hit the opposite kalista quickly
+									\+ isMoveDangerous((Xi, Yi, XDest, YDest), C), % If we move, we hope that Kalista won't be in danger next move.
+									BestMove = (Xi, Yi, XDest, YDest),
+									nl, write('Care.'), nl, 
+									!.
+
+% VI. We can't efficiently place our sbire, so we will move a sbire without hitting an opposite sbire.
+% Here we start to generate the least bad move. We don't want the other player to disobey to the Khan.
+generateMove(C, Moves, BestMove) :- otherPlayer(C, C2),
+									getPieces(C2Pieces, C2),
+									kalista(XK, YK, C),
+									setof([D, Xi, Yi, XDest, YDest], % All moves having these properties
+											(
+												getElement(Moves, (Xi, Yi, XDest, YDest)), % We get a move
+												\+ getElement([(XK, YK)], (Xi, Yi)), % We tend to not move our kalista
+												\+ getElement(C2Pieces, (XDest, YDest)), % We will try to not hit an opposite sbire
+												\+ isMoveDangerous((Xi, Yi, XDest, YDest), C), % If we move, we hope that Kalista won't be in danger next move.
+												hasSbireSameType(XDest, YDest, C), % The other player has case of the same type as our destination.
+												distanceToKalista(XDest, YDest, C2, D) % Calculate distance to opposite Kalista
+											),
+										L
+									),
+									minimumFirstSubList(L, [D, Xi, Yi, XDest, YDest]),
+									BestMove = (Xi, Yi, XDest, YDest), 
+									nl, write('We\'ll just get closer.'), nl, 
+									!.
+
+% VII. At this point, we can't move a sbire to a free position without letting the other player disobey to the Khan.
+% So we will hit an opposite sbire. In spite of everything we try to take an opposite sbire which brings us closer to the opposite Kalista.
 generateMove(C, Moves, BestMove) :- otherPlayer(C, C2),
 									getPieces(C2Pieces, C2),
 									kalista(XK, YK, C), 
 									getElement(Moves, (Xi, Yi, XDest, YDest)), % We get a move
 									\+ getElement([(XK, YK)], (Xi, Yi)), % We tend to not move our kalista
-									\+ getElement(C2Pieces, (XDest, YDest)), % We will try to not hit an opposite sbire
+									element((XDest, YDest), C2Pieces), % Will we hit an opposite sbire ?
 									findMoveToKalista([(XDest, YDest)], _, _, C), % We look if it's possible for us to hit the opposite kalista quickly
-									BestMove = (Xi, Yi, XDest, YDest),
-% ******************************************************************************
-% Should be removed (just for testing and understanding the choices of AI)
-% ******************************************************************************
-									nl, write(4), nl, 
+									\+ isMoveDangerous((Xi, Yi, XDest, YDest), C), % If we move, we hope that Kalista won't be in danger next move.
+									BestMove = (Xi, Yi, XDest, YDest), 
+									nl, write('Eaten for a good reason.'), nl,
 									!.
+
+% VIII. We can't take a sbire which brings us close to Kalista or move to a free position.
+% So we perform the first possible move (of a sbire) making the other player obey to Khan.
+generateMove(C, Moves, BestMove) :- first(Moves, BestMove),
+									getElement(Moves, (Xi, Yi, XDest, YDest)),
+									kalista(XK, YK, C),
+									\+ getElement([(XK, YK)], (Xi, Yi)), % We tend to not move our kalista
+									hasSbireSameType(XDest, YDest, C),
+									\+ isMoveDangerous((Xi, Yi, XDest, YDest), C), % If we move, we hope that Kalista won't be in danger next move.
+									BestMove = (Xi, Yi, XDest, YDest),
+									nl, write('You shall obey to Khan.'), nl,
+									!.
+
+% IX. We move a sbire on a free position. At this point we know that our fellow will disobey to Khan.
+generateMove(C, Moves, BestMove) :- kalista(XK, YK, C), 
+									otherPlayer(C, C2),
+									getPieces(C2Pieces, C2),
+									getElement(Moves, (Xi, Yi, XDest, YDest)), % We get a move
+									\+ getElement([(XK, YK)], (Xi, Yi)), % We tend to not move our kalista
+									\+ getElement(C2Pieces, (XDest, YDest)), % We will try to not hit an opposite sbire	
+									\+ isMoveDangerous((Xi, Yi, XDest, YDest), C), % If we move, we hope that Kalista won't be in danger next move.
+									BestMove = (Xi, Yi, XDest, YDest), 
+									nl, write('You may disobey to Khan.'), nl, 
+									!.
+
+% X. Well, we'll hit an opposite sbire without reward. Maybe next time ?
+generateMove(C, Moves, BestMove) :- kalista(XK, YK, C), 
+									getElement(Moves, (Xi, Yi, XDest, YDest)), % We get a move
+									\+ getElement([(XK, YK)], (Xi, Yi)), % We tend to not move our kalista	
+									% We know that it's not possible to not hit an opposite sbire
+									% We know that it's not possible for us to hit the opposite kalista quickly
+									\+ isMoveDangerous((Xi, Yi, XDest, YDest), C), % If we move, we hope that Kalista won't be in danger next move.
+									BestMove = (Xi, Yi, XDest, YDest), 
+									nl, write('I\'m just angry.'), nl, 
+									!.
+
+% XI. If we are here, it means that we must move our kalista (there is no other possibility)
+% Consequently, we will try to move our Kalista at a global safe place (no matter what type is Khan) without eating a sbire.
 generateMove(C, Moves, BestMove) :- otherPlayer(C, C2),
 									getPieces(C2Pieces, C2),
 									kalista(XK, YK, C), 
-									getElement(Moves, (Xi, Yi, XDest, YDest)), % We get a move
-									\+ getElement([(XK, YK)], (Xi, Yi)), % We tend to not move our kalista	
-									\+ getElement(C2Pieces, (XDest, YDest)), % We will try to not hit an opposite sbire
-									% We know that it's not possible for us to hit the opposite kalista quickly
-									% Consequently, we will choose this move
-									BestMove = (Xi, Yi, XDest, YDest), 
-% ******************************************************************************
-% Should be removed (just for testing and understanding the choices of AI)
-% ******************************************************************************
-									nl, write(5), nl, 
-									!.
-generateMove(C, Moves, BestMove) :- kalista(XK, YK, C), 
-									getElement(Moves, (Xi, Yi, XDest, YDest)), % We get a move
-									\+ getElement([(XK, YK)], (Xi, Yi)), % We tend to not move our kalista	
-									% We know that it's not possible to not hit an opposite sbire
-									findMoveToKalista([(XDest, YDest)], _, _, C), % We look if it's possible for us to hit the opposite kalista quickly
-									BestMove = (Xi, Yi, XDest, YDest), 
-% ******************************************************************************
-% Should be removed (just for testing and understanding the choices of AI)
-% ******************************************************************************
-									nl, write(6), nl,
-									!.
-generateMove(C, Moves, BestMove) :- kalista(XK, YK, C), 
-									getElement(Moves, (Xi, Yi, XDest, YDest)), % We get a move
-									\+ getElement([(XK, YK)], (Xi, Yi)), % We tend to not move our kalista	
-									% We know that it's not possible to not hit an opposite sbire
-									% We know that it's not possible for us to hit the opposite kalista quickly
-									BestMove = (Xi, Yi, XDest, YDest), 
-% ******************************************************************************
-% Should be removed (just for testing and understanding the choices of AI)
-% ******************************************************************************
-									nl, write(7), nl, 
-									!.
-% If we are here, it means that we must move our kalista (there is no other possibility)
-% Consequently, we will try to move our Kalista at a safe place
-generateMove(C, Moves, BestMove) :- otherPlayer(C, C2),
-									kalista(XK, YK, C), 
 									getElement(Moves, (XK, YK, XDest, YDest)), % We get a move
-									possibleMoves(F2, 2, C2),
+									\+ getElement(C2Pieces, (XDest, YDest)), % We will try to not hit an opposite sbire	
+									possibleMoves(F2, 2, C2, _),
 									\+ element((_, _, XDest, YDest), F2), % Then, we check if the other player can hit our kalista quickly
 									BestMove = (XK, YK, XDest, YDest), % If it's not the case, we will move our kalista
-% ******************************************************************************
-% Should be removed (just for testing and understanding the choices of AI)
-% ******************************************************************************
-									nl, write(8), nl, 
+									nl, write('The Kalista moves far away.'), nl, 
 									!.
-% It's not possible to move our Kalista at a safe place not only for the next turn
-% Consequently, we will try to move our Kalista at a safe place only for the next turn
+
+% XII. It's not possible to move our Kalista at a safe place not only for the next turn
+% Consequently, we will try to move our Kalista at a safe place only for the next turn without eating a sbire.
 generateMove(C, Moves, BestMove) :- otherPlayer(C, C2),
 									getPieces(C2Pieces, C2),
 									kalista(XK, YK, C), 
 									getElement(Moves, (XK, YK, XDest, YDest)), % We get a move
-									\+ findMoveToAPosition(C2Pieces, _, _, XDest, YDest, C),
+									\+ getElement(C2Pieces, (XDest, YDest)), % We will try to not hit an opposite sbire	
+									\+ isMoveDangerous((XK, YK, XDest, YDest), C), % We check that the player won't be able to take our Kalista next turn
 									BestMove = (XK, YK, XDest, YDest), % If it's not the case, we will move our kalistha
-% ******************************************************************************
-% Should be removed (just for testing and understanding the choices of AI)
-% ******************************************************************************
-									nl, write(9), nl, 
+									nl, write('The Kalista is afraid.'), nl, 
 									!.
+
+% XIII. We can't move our Kalista without taking a sbire, so we take one.
+generateMove(C, Moves, BestMove) :- kalista(XK, YK, C), 
+									getElement(Moves, (XK, YK, XDest, YDest)), % We get a move
+									BestMove = (XK, YK, XDest, YDest), % If it's not the case, we will move our kalistha
+									nl, write('The Kalista is confused.'), nl, 
+									!.
+
+% XIV. Damn. We really don't know what to do. So we randomly perform the first possible move.
 generateMove(_, Moves, BestMove) :- first(Moves, BestMove),
-% ******************************************************************************
-% Should be removed (just for testing and understanding the choices of AI)
-% ******************************************************************************
-									nl, write(10), nl.
+									nl, write('Randomness.'), nl.	

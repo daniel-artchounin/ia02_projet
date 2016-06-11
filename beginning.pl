@@ -58,7 +58,7 @@ enterPlayerPiecesB(J, N, C) :-	repeat,
 % X2 : Index of second line of pieces.
 % C : Type of player.
 enterMachinePiecesB(0, N, X1, X2, C) :-	write('Position Kalista'),
-										typeOfPlace(X1, J, 2), % We put the Kalista on the first line in a case of type 2
+										typeOfPlace(X1, J, 1), % We put the Kalista on the first line in a case of type 1
 										writePosition(X1, J),
 										storePositionB(X1, J, C), nl,
 										printBoard,
