@@ -1,9 +1,10 @@
 % *** The predicates below are some utilities used during the game. ***
 
-% Management of a request of move by the human
+
+% Management of a request of move by a human
 handleMoveRequest(h, _, X, Y, XNew, YNew, M) :- 
     typeValidMove(X, Y, XNew, YNew, M).
-% Management of a request of move by the machine
+% Management of a request of move by a machine
 handleMoveRequest(m, C, X, Y, XNew, YNew, M) :- 
     generateMove(C, M, (X, Y, XNew, YNew)).
 
@@ -19,27 +20,31 @@ handleException(E, T) :-    write('Erreur : '),
 
 % Displays player's name and type.
 playerInfo(_, _) :- endOfGame.  
-playerInfo(r, h) :- hSep, 
-                    write('**                       Joueur ROUGE                     **'), 
-                    hSep.
-playerInfo(o, h) :- hSep, 
-                    write('**                       Joueur OCRE                      **'), 
-                    hSep.
-playerInfo(r, m) :- hSep, 
-                    write('**                         IA ROUGE                       **'), 
-                    hSep.
-playerInfo(o, m) :- hSep, 
-                    write('**                         IA OCRE                        **'), 
-                    hSep.
+playerInfo(r, h) :- 
+    hSep, 
+    write('**                       Joueur ROUGE                     **'), 
+    hSep.
+playerInfo(o, h) :- 
+    hSep, 
+    write('**                       Joueur OCRE                      **'), 
+    hSep.
+playerInfo(r, m) :- 
+    hSep, 
+    write('**                         IA ROUGE                       **'), 
+    hSep.
+playerInfo(o, m) :- 
+    hSep, 
+    write('**                         IA OCRE                        **'), 
+    hSep.
 
-% Hozizontal separation
+% Hozizontal separation.
 hSep :- 
     nl, 
     write('------------------------------------------------------------'), 
     nl.
 
 % To get a valid move from the user
-% M: List of all possible moves
+% M: list of all possible moves
 typeValidMove(XOld, YOld, XNew, YNew, M) :- 
     repeat,
     write('* Pion a deplacer *'), nl,
@@ -64,43 +69,37 @@ writeMove(X, Y, XNew, YNew) :-
 
 
 % To write a piece position in the command line. 
-writePosition(X, Y) :-  nl,
-                        write('Ligne (x.) : '),
-                        write(X), 
-                        nl,
-                        write('Colonne (y.) : '),
-                        write(Y), 
-                        nl.
+writePosition(X, Y) :-  
+    nl,
+    write('Ligne (x.) : '),
+    write(X), 
+    nl,
+    write('Colonne (y.) : '),
+    write(Y), 
+    nl.
 
 
 % To read a piece position in the command line.
 readPosition(X, Y) :-   
 repeat, nl,
 write('Ligne (x.) : '),
-catch(read(X), E, handleException(E, 'Erreur de lecture de la ligne.')),
+catch(
+    read(X), 
+    E, 
+    handleException(E, 'Erreur de lecture de la ligne.')
+),
 write('Colonne (y.) : '),
-catch(read(Y), E, handleException(E, 'Erreur de lecture de la colonne.')),
+catch(
+    read(Y), 
+    E, 
+    handleException(E, 'Erreur de lecture de la colonne.')
+),
 nl,
 !.
 
 
-% ******************************************************************************
-% To do some tests with the possible moves... -> Should be removed of course !!!
-% ******************************************************************************
-myPrint2([]).
-myPrint2([(X,Y,XNew,YNew)|Q]) :-    write(X), 
-                                    write('*'), 
-                                    write(Y), 
-                                    write(' || '), 
-                                    write(XNew), 
-                                    write('*'), 
-                                    write(YNew), 
-                                    nl, 
-                                    myPrint2(Q).
-
-
-% To get the possible moves of specific colored player
-% based on the Khan's position
+% To get the possible moves of the player with 
+% a specific color based on the Khan's position
 possibleMoves(F, 1, C, H) :-   
     khanAt(X, Y), 
     % We get the type of the place of the Khan
@@ -111,9 +110,9 @@ possibleMoves(F, 1, C, H) :-
     possibleMoves(C, Pieces, F, H, 1, P),
     !.
 
-% To get the possible moves of specific colored player
-% not based on the Khan's position:
-% we generate all moves.
+% To get the possible moves of the player with 
+% a specific color not based on the Khan's 
+% position: we generate all moves.
 possibleMoves(F, 2, C, H) :-    
     getPieces(P1, C, 1),
     possibleMoves(C, P1, F1, H1, 1, 1),
@@ -129,15 +128,17 @@ possibleMoves(F, 2, C, H) :-
 
 % To check if a not last specific move is valid
 isValidNotLastMove(X, Y, H) :-  
-    \+ pieceAt(X, Y), % No piece during the travel
+    % No piece during the travel
+    \+ pieceAt(X, Y), 
     isValidHistoryMove(X, Y, H).
 
 
-% To check if a last specific move 
-% (for a red piece) is valid
+% To check if a last specific move is valid
 isValidLastMove(C, X, Y, H) :-  
-    \+ pieceAt(X, Y, C), % No piece of 
-    % the color of the player at the end of travel
+    % No piece of the color of 
+    % the player at the end of 
+    % the travel
+    \+ pieceAt(X, Y, C),
     isValidHistoryMove(X, Y, H).
 
 
@@ -152,26 +153,33 @@ isValidHistoryMove(X, Y, H) :-
 
 
 % To get all the potential next possible positions 
-% from a place of the board, whether they are valid or not.
-getNextPositions(X, Y, XNew, Y) :-  XNew is X + 1.  
-getNextPositions(X, Y, XNew, Y) :-  XNew is X - 1.  
-getNextPositions(X, Y, X, YNew) :-  YNew is Y + 1. 
-getNextPositions(X, Y, X, YNew) :-  YNew is Y - 1.
+% from a place of the board, whether they are valid 
+% or not.
+getNextPositions(X, Y, XNew, Y) :-  
+    XNew is X + 1.  
+getNextPositions(X, Y, XNew, Y) :-  
+    XNew is X - 1.  
+getNextPositions(X, Y, X, YNew) :-  
+    YNew is Y + 1. 
+getNextPositions(X, Y, X, YNew) :-  
+    YNew is Y - 1.
 
 
-% To get all specific not last valid moves from a place of the board:
-% it is used in the 'possibleMoves' predicate
+% To get all specific not last valid moves 
+% from a place of the board: it is used in 
+% the 'possibleMoves' predicate
 % We also update the history of the move
 getValidMove(Moves, XOld, YOld, NewH, XNew, YNew) :-    
     getElement(Moves, (XOld, YOld, X, Y, H)),
     getNextPositions(X, Y, XNew, YNew),
     % We verify that the future position is valid
     isValidNotLastMove(XNew, YNew, H),
-    concate(H, [(X, Y)], NewH). % We update the history
+    % We update the history
+    concate(H, [(X, Y)], NewH). 
 
 
-% To get all specific last valid moves from a place 
-% of the board: (via setof)
+% To get all specific last valid moves 
+% from a place of the board (using setof): 
 % it is used in the 'possibleMoves' predicate
 % We also update the history of the move
 getValidLastMove(C, Moves, XOld, YOld, NewH, XNew, YNew) :- 
@@ -186,22 +194,21 @@ getValidLastMove(C, Moves, XOld, YOld, NewH, XNew, YNew) :-
 
 
 % To make a list of all possible (full) moves 
-% from a list of places in the board:
-% it is used in the other possibleMoves predicate
+% from a list of places in the board: it is 
+% used in the other 'possibleMoves' predicate
 % C: The color of the user
-% Moves: a list with some elements having 
-% this strucutre (Xi, Yi, Xc, Yc, H),
-% where (Xi, Yi) is the initial position, 
-% where (Xc, Yc) is the current position
-% and H a list containing the path to go 
-% to (Xc, Yc) (excluded) from (Xi, Yi),
+% Moves: a list with some elements having this 
+% strucutre (Xi, Yi, Xc, Yc, H), where (Xi, Yi) 
+% is the initial position, where (Xc, Yc) is the 
+% current position and H a list containing the
+% path to go to (Xc, Yc) (excluded) from (Xi, Yi),
 % FinalMoves: a list with some elements having 
-% this structure (Xi, Yi, Xf, Yf)
-% where (Xi, Yi, Xf, Yf) represents a move 
-% from (Xi, Yi) to (Xf, Yf)
-% H: a list with some elements (each element is a list) 
-% containing the corresponding history for each move 
-% mentionned above
+% this structure (Xi, Yi, Xf, Yf) where 
+% (Xi, Yi, Xf, Yf) represents a move from (Xi, Yi) 
+% to (Xf, Yf)
+% H: a list with some elements (each element 
+% is a list) containing the corresponding history 
+% of each move mentionned above
 % J: iterator
 % N: To know that we should manage the last move
 possibleMoves(C, Moves, FinalMoves, H, N, N) :- 
@@ -223,11 +230,12 @@ possibleMoves(C, Moves, FinalMoves, H, J, N) :-
     !.
 possibleMoves(_, _, [], [], _, _).
 
-% The goal of this predicate is to separate the moves and
-% the history of each move and make two lists
-% based on this separation
+% The goal of this predicate is to separate the 
+% moves and the history of each move to make two 
+% lists based on this separation
 separate5Uples(Moves, FinalMoves, History) :- 
-    % Interface: the two temp lists are used to increase efficiency
+    % Interface: the two temp lists are used 
+    % to increase efficiency
     separate5Uples(Moves, [], [], FinalMoves, History). 
 separate5Uples([], FinalMoves,  History, FinalMoves, History) :- !.
 separate5Uples(
@@ -260,8 +268,10 @@ separate5Uples(
         History
     ).
 
-% Predicate to find a way to the opposite Kalista using a list of initial position(s): used by AI.
-% C : color which attacks.
+
+% Predicate to find a way to the opposite Kalista 
+% using a list of initial position(s): used by AI.
+% C: color of the player who attacks.
 findMoveToKalista([(X, Y)|_], X, Y, C) :-   
     typeOfPlace(X, Y, P),
     otherPlayer(C, C2),
@@ -269,102 +279,131 @@ findMoveToKalista([(X, Y)|_], X, Y, C) :-
     kalista(XK, YK, C2),
     element((X, Y, XK, YK), F),
     !.
-findMoveToKalista([_|T], X1, Y1, C) :-      findMoveToKalista(T, X1, Y1, C).
+findMoveToKalista([_|T], X1, Y1, C) :-  
+    findMoveToKalista(T, X1, Y1, C).
 
-% Iterate over a history of moves (i.e. lists of positions (tuples)) 
-% and throw all those which don't lead to the position specified by (X, Y).
-filterHistoryToPos([], [], _, _) :- !. % End of history
+% Iterate over a history of moves (i.e. lists 
+% of positions (tuples)) and throw all those 
+% which don't lead to the position specified 
+% by (X, Y).
+filterHistoryToPos([], [], _, _) :- 
+    % End of history
+    !. 
 filterHistoryToPos([H|T], [HF|P], X, Y) :-  
     flat(H, HF),
     myLast((X, Y), H), 
     filterHistoryToPos(T, P, X, Y),
     !. % Way found
-filterHistoryToPos([_|T], P, X, Y) :-   filterHistoryToPos(T, P, X, Y). % Way not found
+filterHistoryToPos([_|T], P, X, Y) :-
+    % Way not found   
+    filterHistoryToPos(T, P, X, Y). 
 
-% This predicate simulate a move and check if our Kalista 
-% is ==> immediatly <== (taking Khan into account) in danger.
+
+% This predicate simulates a move and check if 
+% our Kalista is ==> immediatly <== (taking Khan 
+% into account) in danger.
 isMoveDangerous((XF, YF, XT, YT), C) :- 
     kalista(XF, YF, C), % For Kalista
     khanAt(X, Y), % Memory of Khan's position
     % Should we restore the original position ?
     (pieceAt(XF, YF) -> Restore = y ; Restore = n), 
     moveDangerous((XF, YF, XT, YT, X, Y), C, k, Restore),
-    % Here is the important thing : if we find a danger, 
-    % we check that there is NOT in current state, 
-    % otherwise the move is not dangerous itself
+    % Here is the important thing: if we find a danger, 
+    % we check if it's not already the case in the 
+    % current state, otherwise, we consider that the 
+    % move is not dangerous.
     \+ moveDangerous((XF, YF, XF, YF, X, Y), C, k, Restore), 
     !.
 
-isMoveDangerous((XF, YF, XT, YT), C) :- 
-    \+ kalista(XF, YF, C), % For common sbire (important to check)
+isMoveDangerous((XF, YF, XT, YT), C) :-
+    % For sbire (it's also important to check it) 
+    \+ kalista(XF, YF, C), 
     khanAt(X, Y), % Memory of Khan's position
     % Should we restore the original position ?
     (pieceAt(XF, YF) -> Restore = y ; Restore = n), 
     moveDangerous((XF, YF, XT, YT, X, Y), C, s, Restore),
-    % Here is the important thing : if we find a danger, 
-    % we check that there is NOT in current state, 
-    % otherwise the move is not dangerous itself
+    % Here is the important thing: if we find a danger, 
+    % we check if it's not already the case in the 
+    % current state, otherwise, we consider that the 
+    % move is not dangerous.
     \+ moveDangerous((XF, YF, XF, YF, X, Y), C, s, Restore), 
     !.
 
-% Internal predicate used by moveDangerous : check if simulated move 
-% if dangerous, according Khan situations
-% C : Our color
-% (X, Y) : Final position of our move
+% Internal predicate used by moveDangerous: 
+% it checks if the simulated move is dangerous, 
+% based on the Khan's position
+% C: our color
+% (X, Y): final position of our move
 moveDangerousAccordingKhan(C, X, Y) :-  
     otherPlayer(C, C2),
     kalista(XK, YK, C),
-    typeOfPlace(X, Y, P), % Type de place d'arrivée
-    getPiecesOnType(C2Pieces, C2, P), % Pièces adverses sur le même type que la pièce d'arrivée
+    % Type of the arrival place
+    typeOfPlace(X, Y, P), 
+    % Opposite pieces on the same type of places
+    % as the arrival place
+    getPiecesOnType(C2Pieces, C2, P), 
     empty(C2Pieces), % Khan doesn't matter
-    possibleMoves(F, 2, C, _), % All opposite moves
-    element((_, _, XK, YK), F), % Yes, the move is dangerous. (indirect move)
+    % All opposite moves
+    possibleMoves(F, 2, C, _), 
+    % Yes, the move is dangerous (indirect move)
+    element((_, _, XK, YK), F), 
     !.
 
 moveDangerousAccordingKhan(C, X, Y) :-  
     otherPlayer(C, C2),
-    typeOfPlace(X, Y, P), % Type de place d'arrivée
-     % Pièces adverses sur le même type que la pièce d'arrivée
+    % Type of the arrival place
+    typeOfPlace(X, Y, P), 
+    % Opposite pieces on the same type of places
+    % as the arrival place
     getPiecesOnType(C2Pieces, C2, P),
     \+ empty(C2Pieces), % Khan matters
     % Yes, the move is dangerous (direct move)
     findMoveToKalista(C2Pieces, _, _, C2). 
 
 restorePiece(XF, YF, _, _, C, PT, y) :- 
-    setPieceAt(XF, YF, C, PT). % Get piece to its original state.
-% Useful for testing insertions ! (piece wasn't on the board)
+    % Get piece to its original state.
+    setPieceAt(XF, YF, C, PT). 
+% Useful for testing insertions ! 
+% (piece wasn't on the board)
 restorePiece(_, _, _, _, _, _, n). 
 
-% Internal predicate used by isMoveDangerous.
+% Internal predicate used by 'isMoveDangerous'.
 % (XF, YF, XT, YT, KX, KY) : (X initial, Y initial, 
-% X final, Y final, X mémoire du Khan, Y mémoire du Khan)
-% C : Our color
-% PT : Kalista ou sbire déplacé ? (k / s)
-% Restore : should we restore the placed piece ? 
+% X final, Y final, KX Khan's memory, KY Khan's 
+% memory)
+% C: our color
+% PT: Kalista ou sbire moved ? (k/s)
+% Restore: should we restore the placed piece ? 
 % Should be 'y' if we want to => force <= a restore! 
 moveDangerous((XF, YF, XT, YT, KX, KY), C, PT, Restore) :- 
     clearAt(XF, YF, C), % We simulate the move
     setPieceAt(XT, YT, C, PT),
     updateKhan(XT, YT), 
-    moveDangerousAccordingKhan(C, XT, YT), % Test situation
-    clearAt(XT, YT, C), % Restore the previous state
+    % Test situation
+    moveDangerousAccordingKhan(C, XT, YT),
+    % Restore the previous state 
+    clearAt(XT, YT, C), 
     updateKhan(KX, KY),
     restorePiece(XF, YF, XT, YT, C, PT, Restore),
     !.
 
 moveDangerous((XF, YF, XT, YT, KX, KY), C, PT, Restore) :-  
-    clearAt(XT, YT, C), % Cleaning in case of failure.
+    % Cleaning in case of failure.
+    clearAt(XT, YT, C), 
     updateKhan(KX, KY),
     restorePiece(XF, YF, XT, YT, C, PT, Restore),
     fail.
 
-% Get a estimation a distance to C-Kalista (no matter the validity of way)
+% Get an estimation of the distance to 
+% the C-colored Kalista (no matter the 
+% validity of way)
 distanceToKalista(X, Y, C, D) :-    
     kalista(XK, YK, C),
     D is (X - XK) * (X - XK) + (Y - YK) * (Y - YK).
 
-% The predicate checks if the other player has sbire on 
-% the same case type as (X, Y) and can perform a move from it.
+% The predicate checks if the other player 
+% has sbire on the same type of places as 
+% (X, Y) and can perform a move from it.
 hasSbireSameType(X, Y, C) :-    
     otherPlayer(C, C2),
     getPieces(C2Pieces, C2),
@@ -373,9 +412,12 @@ hasSbireSameType(X, Y, C) :-
     typeOfPlace(XC2, YC2, P2),
     P = P2,
     possibleMoves(C, [(XC2, YC2, XC2, YC2, [])], F, _, 1, P2),
-    \+ empty(F). % Can the player perform a move from that position ?
+    % Can the player perform a move from that position ?
+    \+ empty(F). 
 
-% Predicate to find the minimum of a simple nested list based on the first element.
+% Predicate to find the minimum of 
+% a simple nested list based on the 
+% first element.
 minimumFirstSubList([X], X).
 minimumFirstSubList([[D1|T1],[D2|T2]|T], N) :- 
     (D1 > D2 -> 
@@ -384,68 +426,104 @@ minimumFirstSubList([[D1|T1],[D2|T2]|T], N) :-
         minimumFirstSubList([[D1|T1]|T], N)
     ).
 
-% I. The best move is the one which allow us to take the opposite kalista.
+% I. The best move is the one which allow 
+% us to take the opposite kalista.
 generateMove(C, Moves, BestMove) :- 
     otherPlayer(C, C2), 
     kalista(XK, YK, C2),
     element((X, Y, XK, YK), Moves),
     BestMove = (X, Y, XK, YK),
-    nl, write('Job done.'), nl, 
+    nl, 
+    write('Job done.'), 
+    nl, 
     !.
 
-% II. If our Kalista is threatened by an or several moves, we should try to 
-% move a sbire to block the move. It is a special case as it is unlikely 
-% to happen in most situations, but this is the
-% optimal defensive move instead of moving the Kalista.
+% II. If our Kalista is threatened by one or 
+% several moves, we should try to move a sbire 
+% to block the move. It is a special case as 
+% it is unlikely to happen in most situations, 
+% but this is the optimal defensive move instead 
+% of moving the Kalista.
 generateMove(C, Moves, BestMove) :- 
     otherPlayer(C, C2),
     getPieces(C2Pieces, C2),
-    % Other player has a direct way to our Kalista (no matter what is Khan's position)
+    % Other player has a direct way to our Kalista 
+    % (no care about Khan's position)
     findMoveToKalista(C2Pieces, _, _, C2), 
-    possibleMoves(_, 2, C2, H), % We get all his possible moves AND moves history
-    kalista(XK, YK, C), % What is the exact position of our Kalista ?
-    filterHistoryToPos(H, R, XK, YK), % Which positions are part of moves which go to our Kalista ?
-    flat(R, R2), % All positions in a non-nested list
-    getElement(Moves, (XF, YF, XT, YT)), % We get a possible move 
-    % that we can perform (backtracking will try several positions)
+    % We get all his possible moves AND moves history
+    possibleMoves(_, 2, C2, H), 
+    % What is the exact position of our Kalista ?
+    kalista(XK, YK, C), 
+    % Which positions are part of moves to go to 
+    % our Kalista ?
+    filterHistoryToPos(H, R, XK, YK), 
+    % All positions in a non-nested list
+    flat(R, R2), 
+    % We get a possible move that we can perform 
+    % (backtracking will try several positions)
+    getElement(Moves, (XF, YF, XT, YT)),    
+    % We won't block the move with our Kalista... 
+    % Just have a look to the next predicate 
     XF \= XK,
-    YF \= YK, % We won't block a move with Kalista... see next predicate.
-    memberchk((XT, YT), R2), % Can the move block the way to our Kalista ?
-    \+ isMoveDangerous((XF, YF, XT, YT), C), % Has the blocking been effective ?
-    BestMove = (XF, YF, XT, YT), % If so, we set the blocking.
-    nl, write('Body blocked !'), nl, 
+    YF \= YK,
+    % Can the move block the way to our Kalista ?
+    memberchk((XT, YT), R2), 
+    % Has the blocking been efficient ?
+    \+ isMoveDangerous((XF, YF, XT, YT), C), 
+    % If so, we set the blocking.
+    BestMove = (XF, YF, XT, YT), 
+    nl, 
+    write('Body blocked !'), 
+    nl, 
     !.
 
-% III. If our Kalista is threatened and that the way can't be blocked, 
-% we try to move our Kalista to a place where NO opposite sbire could move,
-% ==> regardless of Khan's position <== : optimal move for Kalista.
+% III. If our Kalista is threatened and that 
+% the way can't be blocked, we try to move our 
+% Kalista to a place where NO opposite sbire could 
+% move, ==> without taking care of Khan's 
+% position <==: it's the optimal move for 
+% Kalista.
 generateMove(C, Moves, BestMove) :- 
     otherPlayer(C, C2), 
-    getPieces(C2Pieces, C2), % We get the other player pieces
-    findMoveToKalista(C2Pieces, _, _, C2), % We look if it's possible for him to hit our kalista
-    possibleMoves(F2, 2, C2, _), % If it's the case, we get all the potential moves of the other user
+    % We get the other player pieces
+    getPieces(C2Pieces, C2),
+    % We look if it's possible for him 
+    % to hit our kalista
+    findMoveToKalista(C2Pieces, _, _, C2), 
+    % If it's the case, we get all the potential 
+    % moves of the other user
+    possibleMoves(F2, 2, C2, _), 
     kalista(XK, YK, C),
-    getElement(Moves, (XK, YK, XDest, YDest)), % We get a move of our kalista
+    % We get a move of our kalista
+    getElement(Moves, (XK, YK, XDest, YDest)), 
     % Then, we check if the other player could hit 
     % our kalista at this new position (in the future, 
     % not especially next turn)
     \+ element((_, _, XDest, YDest), F2), 
-    BestMove = (XK, YK, XDest, YDest), % If it's not the case, we will move our kalista
+    % If it's not the case, we will move our kalista
+    BestMove = (XK, YK, XDest, YDest), 
     nl, write('Not today !'), nl, 
     !.
 
-% IV. If our Kalista is threatened, with no sbire blocking possibilities and no global safe place,
-% we try to move our Kalista at a place where no opposite sbire can reach it ==> for the next turn <==, 
-% i.e. from a place which has the same type as the future position of Kalista (because of Khan).
-% This is the least optimal defensive move.
+% IV. If our Kalista is threatened, with no sbire blocking 
+% possibilities and no global safe place, we try to move 
+% our Kalista at a place where no opposite sbire can reach 
+% it ==> for the next turn <==, i.e. from a place which has 
+% the same type as the future position of Kalista (because 
+% of Khan). This is the least optimal defensive move.
 generateMove(C, Moves, BestMove) :- 
     otherPlayer(C, C2), 
-    getPieces(C2Pieces, C2), % We get the other player pieces
-    findMoveToKalista(C2Pieces, _, _, C2), % We look if it's possible for him to hit our kalista
+    % We get the other player pieces
+    getPieces(C2Pieces, C2), 
+    % We look if it's possible for him to hit our kalista
+    findMoveToKalista(C2Pieces, _, _, C2), 
     kalista(XK, YK, C),
-    getElement(Moves, (XK, YK, XDest, YDest)), % We get a move of our kalista
-    \+ isMoveDangerous((XK, YK, XDest, YDest), C), % Has the defense been effective ?
-    BestMove = (XK, YK, XDest, YDest), % If it's not the case, we will move our kalista
+    % We get a move of our kalista
+    getElement(Moves, (XK, YK, XDest, YDest)), 
+    % Has the defense been efficient ?
+    \+ isMoveDangerous((XK, YK, XDest, YDest), C), 
+    % If it's not the case, we will move our kalista
+    BestMove = (XK, YK, XDest, YDest), 
     nl, write('Maybe later...'), nl, 
     !.
 
@@ -564,7 +642,8 @@ generateMove(C, Moves, BestMove) :-
 % XI. If we are here, it means that we must move our kalista 
 % (there is no other possibility)
 % Consequently, we will try to move our Kalista 
-% at a global safe place (no matter what type is Khan) 
+% at a global safe place (no care of the type 
+% of the Khan) 
 % without eating a sbire.
 generateMove(C, Moves, BestMove) :- 
     otherPlayer(C, C2),
