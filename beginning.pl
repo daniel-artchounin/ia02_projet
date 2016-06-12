@@ -2,7 +2,7 @@
 
 
 % To enter red pieces for human at the beginning of the game (interface).
-enterPiecesB(h, r) :- 	
+enterPiecesB(h, r) :-   
     hSep, 
     write('* Pose initiale des six pieces du joueur ROUGE *'), 
     hSep,
@@ -11,7 +11,7 @@ enterPiecesB(h, r) :-
     !.
 
 % To enter ocre pieces for human at the beginning of the game (interface).
-enterPiecesB(h, o) :- 	
+enterPiecesB(h, o) :-   
     hSep, 
     write('* Pose initiale des six pieces du joueur OCRE *'), 
     hSep,
@@ -21,7 +21,7 @@ enterPiecesB(h, o) :-
 
 
 % To enter red pieces for AI at the beginning of the game (interface).
-enterPiecesB(m, r) :-	
+enterPiecesB(m, r) :-   
     hSep, 
     write('* Pose initiale des six pieces du l\'IA ROUGE *'), 
     hSep,
@@ -30,7 +30,7 @@ enterPiecesB(m, r) :-
     !.
 
 % To enter ocre pieces for AI at the beginning of the game (interface).
-enterPiecesB(m, o) :-	
+enterPiecesB(m, o) :-   
     hSep, 
     write('* Pose initiale des six pieces de l\'IA OCRE *'), 
     hSep,
@@ -41,7 +41,7 @@ enterPiecesB(m, o) :-
 
 
 % To enter red pieces at the beginning of the game.
-enterPlayerPiecesB(0, N, C) :-	
+enterPlayerPiecesB(0, N, C) :-  
     repeat, 
     write('Position Kalista'),
     readPosition(X, Y), 
@@ -50,8 +50,8 @@ enterPlayerPiecesB(0, N, C) :-
     enterPlayerPiecesB(1, N, C), 
     !.
 enterPlayerPiecesB(N, N, _) :- !.
-enterPlayerPiecesB(J, N, C) :-	
-    repeat,				
+enterPlayerPiecesB(J, N, C) :-  
+    repeat,             
     write('Position Sbire '), 
     write(J),
     readPosition(X, Y),
@@ -63,7 +63,7 @@ enterPlayerPiecesB(J, N, C) :-
 % X1 : Index of first line of pieces. 
 % X2 : Index of second line of pieces.
 % C : Type of player.
-enterMachinePiecesB(0, N, X1, X2, C) :-	
+enterMachinePiecesB(0, N, X1, X2, C) :- 
     write('Position Kalista'),
     typeOfPlace(X1, J, 1), % We put the Kalista on the first line in a case of type 1
     writePosition(X1, J),
@@ -83,8 +83,8 @@ enterMachinePiecesB(0, N, X1, X2, C) :-
     concate(R1, [(X2, J1)|R2], Res), % Res contains exactly 5 elements
     enterMachinePiecesB(1, N, Res, C), 
     !.
-enterMachinePiecesB(N, N, _, _) :-	!.
-enterMachinePiecesB(J, N, [(X, Y)|T], C) :-	
+enterMachinePiecesB(N, N, _, _) :-  !.
+enterMachinePiecesB(J, N, [(X, Y)|T], C) :- 
     write('Position Sbire '), 
     write(J),
     writePosition(X, Y),
@@ -95,7 +95,7 @@ enterMachinePiecesB(J, N, [(X, Y)|T], C) :-
 
 % To test and perhaps store a piece position 
 % typed by a user at the beginning of the game.
-storePositionB(X, Y, C) :-	
+storePositionB(X, Y, C) :-  
     \+ pieceAt(X, Y),
     Y >= 1, 
     Y =< 6,
@@ -105,12 +105,12 @@ storePositionB(X, Y, C) :-
 
 % To test the validity of a red piece position at the 
 % beginning of the game.
-isValidPositionB(X, _, r) :-	
+isValidPositionB(X, _, r) :-    
     X >= 5, 
     X =< 6.
 
 % To test the validity of an ocre piece position at the 
 % beginning of the game.
-isValidPositionB(X, _, o) :-	
+isValidPositionB(X, _, o) :-    
     X >= 1, 
     X =< 2.

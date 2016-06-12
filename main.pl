@@ -56,21 +56,21 @@ choice(_) :-    hSep,
 start(T1, T2) :-    % Initialization of the board
                     initBoard(T1), 
                     % The red player/IA sets initial 
-                    % position of his pieces					
+                    % position of his pieces                    
                     enterPiecesB(T1, r), 
                     % The ocre player/IA sets initial 
-                    % position of his pieces					
-                    enterPiecesB(T2, o), 					
+                    % position of his pieces                    
+                    enterPiecesB(T2, o),                    
                     playerInfo(r, T1),
                     % The first turn of red player/AI: no need to obey 
                     % to Khan as it doesn't exist yet
-                    playerTurn(r, T1, 2),					
+                    playerTurn(r, T1, 2),                   
                     playerInfo(o, T2),
                     printBoard,
                     % The first turn of ocre player/AI
                     playerTurn(o, T2, 1), 
-                    % To manage every turn of the game					
-                    turn(T1, T2), 					
+                    % To manage every turn of the game                  
+                    turn(T1, T2),                   
                     cleanAll.
 
 
@@ -94,7 +94,7 @@ playerTurn(_, _, _) :-  endOfGame, % Game is over.
 % T: type of the player
 % C: color of the player
 % MoveType: 1 if it should obey to the Khan, 2 otherwise
-playerTurn(C, T, MoveType) :-   nl, % Standard move		
+playerTurn(C, T, MoveType) :-   nl, % Standard move     
                                 possibleMoves(M, MoveType, C, _),
                                 % Will be empty if MoveType = 1 and 
                                 % no piece can obey to the Khan

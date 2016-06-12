@@ -68,13 +68,13 @@ printPiece(_, _) :- write('    ').
 printKhan(X, Y) :-  khanAt(X, Y), 
                     write('*'), 
                     !.
-printKhan(_, _) :- 	write(' ').
+printKhan(_, _) :-  write(' ').
 
 % To verify the validity of the emplacement of the new sbire.
 verificationNewSbire(X, Y) :-   hSep, 
                                 write('* Emplacement du nouveau sbire *'), 
                                 hSep, 
-                                nl,			
+                                nl,         
                                 readPosition(X, Y),
                                 \+ pieceAt(X, Y).
 
@@ -90,7 +90,7 @@ insertNewSbire(C, h, X, Y) :-
     !.
 
 % To insert a new sbire for a machine during the game.
-insertNewSbire(C, m, X, Y) :-		
+insertNewSbire(C, m, X, Y) :-       
     setof(
         (X1, X2), 
         freePosition(1, 1, X1, X2), 
@@ -107,29 +107,29 @@ insertNewSbire(C, m, X, Y) :-
 % To update the position of the Khan
 updateKhan(X, Y) :- clearKhan,
                     assertz(khanAt(X, Y)).
-						
+                        
 
 % To update the position of a piece
 move(XOld, YOld, XNew, YNew, C) :- 
-    % Systematic update of the Khan and erasing of the arrival piece				
+    % Systematic update of the Khan and erasing of the arrival piece                
     updateKhan(XNew, YNew), 
     clearAt(XNew, YNew),
     updatePosition(XOld, YOld, XNew, YNew, C).
 
-updatePosition(XOld, YOld, XNew, YNew, C) :- 	
+updatePosition(XOld, YOld, XNew, YNew, C) :-    
     kalista(XOld, YOld, C), % Move of the kalista if it's a Kalista
     clearAt(XOld, YOld),
     kalistaAt(XNew, YNew, C), 
     !.
 
-updatePosition(XOld, YOld, XNew, YNew, C) :- 	
+updatePosition(XOld, YOld, XNew, YNew, C) :-    
     clearAt(XOld, YOld), % Move of the sbire by default
     sbireAt(XNew, YNew, C).
 
 % The red player has won
-changePiecePosition(XOld, YOld, XNew, YNew, r) :-	
-    ocreKalista(XNew, YNew), % The ocre player has lost the game	
-    move(XOld, YOld, XNew, YNew, r),						
+changePiecePosition(XOld, YOld, XNew, YNew, r) :-   
+    ocreKalista(XNew, YNew), % The ocre player has lost the game    
+    move(XOld, YOld, XNew, YNew, r),                        
     asserta(endOfGameO),
     hSep, 
     write('*** Bravo joueur Rouge, vous avez GAGNE !!! ***'), hSep,
@@ -138,7 +138,7 @@ changePiecePosition(XOld, YOld, XNew, YNew, r) :-
     !.
 
 % The ocre player has won
-changePiecePosition(XOld, YOld, XNew, YNew, o) :- 	
+changePiecePosition(XOld, YOld, XNew, YNew, o) :-   
     redKalista(XNew, YNew), % The red player has lost the game
     move(XOld, YOld, XNew, YNew, o),
     asserta(endOfGameR),
@@ -152,7 +152,7 @@ changePiecePosition(XOld, YOld, XNew, YNew, o) :-
 changePiecePosition(XOld, YOld, XNew, YNew, C) :- move(XOld, YOld, XNew, YNew, C).
 
 % To manage the choice of a player when no piece could be moved
-changePositionOrNewSbire(C, h) :- 	
+changePositionOrNewSbire(C, h) :-   
     repeat, 
     hSep,
     write('Vous ne pouvez pas obeir au KHAN.'), nl,
@@ -169,18 +169,18 @@ changePositionOrNewSbire(C, h) :-
 % First, it checks if it's possible to hit the kalista by simply moving a piece. If so, we perform that move.
 % If it's not the case, it tries to insert a sbire such as it can find an immediate way to opposite Kalista.
 % If it's also not possible, it moves a piece.
-changePositionOrNewSbire(C, m) :- 	
+changePositionOrNewSbire(C, m) :-   
     possibleMoves(Moves, 1, C, _),
     otherPlayer(C, C2), 
     kalista(XK, YK, C2),
-    element((_, _, XK, YK), Moves),									
+    element((_, _, XK, YK), Moves),                                 
     managePositionOrNewSbire(1, C, m), % Eat that Kalista !
     !.
-changePositionOrNewSbire(C, m) :- 	
+changePositionOrNewSbire(C, m) :-   
     % Try to insert a sbire such as we can eat that Kalista !
     managePositionOrNewSbire(2, C, m), 
     !.
-changePositionOrNewSbire(C, m) :- 	
+changePositionOrNewSbire(C, m) :-   
     % Well, just move a piece at best place.
     managePositionOrNewSbire(1, C, m),
     !.
@@ -189,11 +189,11 @@ changePositionOrNewSbire(C, m) :-
 % C : color
 % T : type of player (AI / Human)
 % Insertion d'un nouveau sbire suite à blocage du Khan (humain ou machine)
-managePositionOrNewSbire(2, C, T) :- 	
+managePositionOrNewSbire(2, C, T) :-    
     insertNewSbire(C, T, _, _),
     !.
 
-managePositionOrNewSbire(1, C, T) :-	
+managePositionOrNewSbire(1, C, T) :-    
     hSep, 
     write('* Deplacement de type different de celui du KHAN *'), hSep,
     possibleMoves(M, 2, C, _),
@@ -202,7 +202,7 @@ managePositionOrNewSbire(1, C, T) :-
     changePiecePosition(X, Y, XNew, YNew, C),
     !.
 
-managePositionOrNewSbire(_, _) :- 	
+managePositionOrNewSbire(_, _) :-   
     write('Veuillez sélectionner une option valide.'),
     fail. 
 

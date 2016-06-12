@@ -42,7 +42,7 @@ sideChoice(e) :- defineBoardEast.
 
 
 % Prints the board
-printBoard :- 	
+printBoard :-   
     nl, 
     write('        1        2        3        4        5        6'), 
     nl,
@@ -55,12 +55,12 @@ printBoard :-
 
 % Displays a line of the board (with pieces):
 % it is used in the 'print2D' predicate
-print1D([], _, _) :-	
+print1D([], _, _) :-    
     nl, 
     write('    +--------+--------+--------+--------+--------+--------+').
 print1D([TBoard|QBoard], I, J) :-   write(TBoard),
-                                    printKhan(I, J),								 
-                                    printPiece(I, J),									
+                                    printKhan(I, J),                                 
+                                    printPiece(I, J),                                   
                                     write(' | '),
                                     NewJ is J + 1,
                                     print1D(QBoard, I, NewJ).

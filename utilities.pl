@@ -2,7 +2,7 @@
 
 % Management of a request of move by the human
 handleMoveRequest(h, _, X, Y, XNew, YNew, M) :- 
-	typeValidMove(X, Y, XNew, YNew, M).
+    typeValidMove(X, Y, XNew, YNew, M).
 % Management of a request of move by the machine
 handleMoveRequest(m, C, X, Y, XNew, YNew, M) :- 
     generateMove(C, M, (X, Y, XNew, YNew)).
@@ -18,7 +18,7 @@ handleException(E, T) :-    write('Erreur : '),
                             fail.
 
 % Displays player's name and type.
-playerInfo(_, _) :- endOfGame.	
+playerInfo(_, _) :- endOfGame.  
 playerInfo(r, h) :- hSep, 
                     write('**                       Joueur ROUGE                     **'), 
                     hSep.
@@ -50,7 +50,7 @@ typeValidMove(XOld, YOld, XNew, YNew, M) :-
     !.
 
 % To write the details of a move in the command line.
-writeMove(X, Y, XNew, YNew) :-	
+writeMove(X, Y, XNew, YNew) :-  
     write('Deplacement : ('), 
     write(X), 
     write(', '), 
@@ -128,14 +128,14 @@ possibleMoves(F, 2, C, H) :-
 
 
 % To check if a not last specific move is valid
-isValidNotLastMove(X, Y, H) :- 	
+isValidNotLastMove(X, Y, H) :-  
     \+ pieceAt(X, Y), % No piece during the travel
     isValidHistoryMove(X, Y, H).
 
 
 % To check if a last specific move 
 % (for a red piece) is valid
-isValidLastMove(C, X, Y, H) :- 	
+isValidLastMove(C, X, Y, H) :-  
     \+ pieceAt(X, Y, C), % No piece of 
     % the color of the player at the end of travel
     isValidHistoryMove(X, Y, H).
@@ -143,26 +143,26 @@ isValidLastMove(C, X, Y, H) :-
 
 % To check if a specific move is not already 
 % in the history and not out of board bounds.
-isValidHistoryMove(X, Y, H) :-	
+isValidHistoryMove(X, Y, H) :-  
     X =< 6,
-	X >= 1,
-	Y =< 6,
-	Y >= 1,
-	\+ element((X, Y), H).
+    X >= 1,
+    Y =< 6,
+    Y >= 1,
+    \+ element((X, Y), H).
 
 
 % To get all the potential next possible positions 
 % from a place of the board, whether they are valid or not.
-getNextPositions(X, Y, XNew, Y) :- 	XNew is X + 1.  
-getNextPositions(X, Y, XNew, Y) :- 	XNew is X - 1.  
+getNextPositions(X, Y, XNew, Y) :-  XNew is X + 1.  
+getNextPositions(X, Y, XNew, Y) :-  XNew is X - 1.  
 getNextPositions(X, Y, X, YNew) :-  YNew is Y + 1. 
-getNextPositions(X, Y, X, YNew) :- 	YNew is Y - 1.
+getNextPositions(X, Y, X, YNew) :-  YNew is Y - 1.
 
 
 % To get all specific not last valid moves from a place of the board:
 % it is used in the 'possibleMoves' predicate
 % We also update the history of the move
-getValidMove(Moves, XOld, YOld, NewH, XNew, YNew) :-	
+getValidMove(Moves, XOld, YOld, NewH, XNew, YNew) :-    
     getElement(Moves, (XOld, YOld, X, Y, H)),
     getNextPositions(X, Y, XNew, YNew),
     % We verify that the future position is valid
@@ -174,7 +174,7 @@ getValidMove(Moves, XOld, YOld, NewH, XNew, YNew) :-
 % of the board: (via setof)
 % it is used in the 'possibleMoves' predicate
 % We also update the history of the move
-getValidLastMove(C, Moves, XOld, YOld, NewH, XNew, YNew) :-	
+getValidLastMove(C, Moves, XOld, YOld, NewH, XNew, YNew) :- 
     % We get an intermediate move
     getElement(Moves, (XOld, YOld, X, Y, H)),
     % We get a possible position
@@ -204,14 +204,14 @@ getValidLastMove(C, Moves, XOld, YOld, NewH, XNew, YNew) :-
 % mentionned above
 % J: iterator
 % N: To know that we should manage the last move
-possibleMoves(C, Moves, FinalMoves, H, N, N) :-	
+possibleMoves(C, Moves, FinalMoves, H, N, N) :- 
     setof( % Last move
-    	(XOld, YOld, XNew, YNew, TmpH), 
-    	getValidLastMove(C, Moves, XOld, YOld, TmpH, XNew, YNew), 
-    	TmpFinalMoves
+        (XOld, YOld, XNew, YNew, TmpH), 
+        getValidLastMove(C, Moves, XOld, YOld, TmpH, XNew, YNew), 
+        TmpFinalMoves
     ),
     separate5Uples(TmpFinalMoves, FinalMoves, H),
-												!.
+                                                !.
 possibleMoves(C, Moves, FinalMoves, H, J, N) :- 
     setof( % Not last move
         (XOld, YOld, XNew, YNew, TmpH), 
@@ -236,7 +236,7 @@ separate5Uples(
     TempH, 
     FinalMoves, 
     History
-) :-	
+) :-    
     separate5Uples(
         QTmpFinalMoves, 
         [(Xi, Yi, Xf, Yf)|TmpFinalMoves],  
@@ -262,19 +262,19 @@ separate5Uples(
 
 % Predicate to find a way to the opposite Kalista using a list of initial position(s): used by AI.
 % C : color which attacks.
-findMoveToKalista([(X, Y)|_], X, Y, C) :-	
+findMoveToKalista([(X, Y)|_], X, Y, C) :-   
     typeOfPlace(X, Y, P),
     otherPlayer(C, C2),
     possibleMoves(C, [(X, Y, X, Y, [])], F, _, 1, P),
     kalista(XK, YK, C2),
     element((X, Y, XK, YK), F),
     !.
-findMoveToKalista([_|T], X1, Y1, C) :- 		findMoveToKalista(T, X1, Y1, C).
+findMoveToKalista([_|T], X1, Y1, C) :-      findMoveToKalista(T, X1, Y1, C).
 
 % Iterate over a history of moves (i.e. lists of positions (tuples)) 
 % and throw all those which don't lead to the position specified by (X, Y).
 filterHistoryToPos([], [], _, _) :- !. % End of history
-filterHistoryToPos([H|T], [HF|P], X, Y) :- 	
+filterHistoryToPos([H|T], [HF|P], X, Y) :-  
     flatten(H, HF),
     myLast((X, Y), H), 
     filterHistoryToPos(T, P, X, Y),
@@ -311,7 +311,7 @@ isMoveDangerous((XF, YF, XT, YT), C) :-
 % if dangerous, according Khan situations
 % C : Our color
 % (X, Y) : Final position of our move
-moveDangerousAccordingKhan(C, X, Y) :- 	
+moveDangerousAccordingKhan(C, X, Y) :-  
     otherPlayer(C, C2),
     kalista(XK, YK, C),
     typeOfPlace(X, Y, P), % Type de place d'arrivée
@@ -321,7 +321,7 @@ moveDangerousAccordingKhan(C, X, Y) :-
     element((_, _, XK, YK), F), % Yes, the move is dangerous. (indirect move)
     !.
 
-moveDangerousAccordingKhan(C, X, Y) :- 	
+moveDangerousAccordingKhan(C, X, Y) :-  
     otherPlayer(C, C2),
     typeOfPlace(X, Y, P), % Type de place d'arrivée
      % Pièces adverses sur le même type que la pièce d'arrivée
@@ -352,20 +352,20 @@ moveDangerous((XF, YF, XT, YT, KX, KY), C, PT, Restore) :-
     restorePiece(XF, YF, XT, YT, C, PT, Restore),
     !.
 
-moveDangerous((XF, YF, XT, YT, KX, KY), C, PT, Restore) :- 	
+moveDangerous((XF, YF, XT, YT, KX, KY), C, PT, Restore) :-  
     clearAt(XT, YT, C), % Cleaning in case of failure.
     updateKhan(KX, KY),
     restorePiece(XF, YF, XT, YT, C, PT, Restore),
     fail.
 
 % Get a estimation a distance to C-Kalista (no matter the validity of way)
-distanceToKalista(X, Y, C, D) :- 	
+distanceToKalista(X, Y, C, D) :-    
     kalista(XK, YK, C),
     D is (X - XK) * (X - XK) + (Y - YK) * (Y - YK).
 
 % The predicate checks if the other player has sbire on 
 % the same case type as (X, Y) and can perform a move from it.
-hasSbireSameType(X, Y, C) :-	
+hasSbireSameType(X, Y, C) :-    
     otherPlayer(C, C2),
     getPieces(C2Pieces, C2),
     typeOfPlace(X, Y, P),
@@ -489,7 +489,7 @@ generateMove(C, Moves, BestMove) :-
             % Calculate distance to opposite Kalista
             distanceToKalista(XDest, YDest, C2, D) 
         ),
-    	L
+        L
     ),
     minimumFirstSubList(L, [D, Xi, Yi, XDest, YDest]),
     BestMove = (Xi, Yi, XDest, YDest), 
@@ -552,7 +552,7 @@ generateMove(C, Moves, BestMove) :-
 generateMove(C, Moves, BestMove) :- 
     kalista(XK, YK, C), 
     getElement(Moves, (Xi, Yi, XDest, YDest)), % We get a move
-    \+ getElement([(XK, YK)], (Xi, Yi)), % We tend to not move our kalista	
+    \+ getElement([(XK, YK)], (Xi, Yi)), % We tend to not move our kalista  
     % We know that it's not possible to not hit an opposite sbire
     % We know that it's not possible for us to hit the opposite kalista quickly
     % If we move, we hope that Kalista won't be in danger next move.
@@ -589,7 +589,7 @@ generateMove(C, Moves, BestMove) :-
     getPieces(C2Pieces, C2),
     kalista(XK, YK, C), 
     getElement(Moves, (XK, YK, XDest, YDest)), % We get a move
-    \+ getElement(C2Pieces, (XDest, YDest)), % We will try to not hit an opposite sbire	
+    \+ getElement(C2Pieces, (XDest, YDest)), % We will try to not hit an opposite sbire 
     \+ isMoveDangerous((XK, YK, XDest, YDest), C), % We check that the player won't be able to take our Kalista next turn
     BestMove = (XK, YK, XDest, YDest), % If it's not the case, we will move our kalistha
     nl, write('The Kalista is afraid.'), nl, 

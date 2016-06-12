@@ -9,7 +9,7 @@
 % 
 % yes
 rotateVectorAC([], []) :- !.
-rotateVectorAC([X|Q], T) :-	
+rotateVectorAC([X|Q], T) :- 
     rotateVectorAC(Q, T1), 
     concate(T1, [[X]], T). 
 
@@ -22,7 +22,7 @@ rotateVectorAC([X|Q], T) :-
 % 
 % yes
 rotateVectorC([], []) :- !.
-rotateVectorC([X|Q], T) :-	
+rotateVectorC([X|Q], T) :-  
     rotateVectorC(Q, T1), 
     concate([[X]], T1, T). 
 
@@ -36,7 +36,7 @@ rotateVectorC([X|Q], T) :-
 concateMatrix([], [], []) :- !.
 concateMatrix(X1, [], X1) :- !.
 concateMatrix([], X1, X1) :- !.
-concateMatrix([X1|X2], [Y1|Y2], M) :-	
+concateMatrix([X1|X2], [Y1|Y2], M) :-   
     concateMatrix(X2, Y2, M2), 
     concate(X1, Y1, L1), 
     concate([L1], M2, M).
