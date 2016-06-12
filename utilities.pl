@@ -165,7 +165,8 @@ getNextPositions(X, Y, X, YNew) :- 	YNew is Y - 1.
 getValidMove(Moves, XOld, YOld, NewH, XNew, YNew) :-	
     getElement(Moves, (XOld, YOld, X, Y, H)),
     getNextPositions(X, Y, XNew, YNew),
-    isValidNotLastMove(XNew, YNew, H), % We verify that the future position is valid
+    % We verify that the future position is valid
+    isValidNotLastMove(XNew, YNew, H),
     concate(H, [(X, Y)], NewH). % We update the history
 
 
@@ -174,22 +175,33 @@ getValidMove(Moves, XOld, YOld, NewH, XNew, YNew) :-
 % it is used in the 'possibleMoves' predicate
 % We also update the history of the move
 getValidLastMove(C, Moves, XOld, YOld, NewH, XNew, YNew) :-	
-    getElement(Moves, (XOld, YOld, X, Y, H)), % We get an intermediate move
-    getNextPositions(X, Y, XNew, YNew), % We get a possible position
-    isValidLastMove(C, XNew, YNew, H), % We verify that the last move is valid
-    concate(H, [(X, Y), (XNew, YNew)], NewH). % We update the history
+    % We get an intermediate move
+    getElement(Moves, (XOld, YOld, X, Y, H)),
+    % We get a possible position
+    getNextPositions(X, Y, XNew, YNew),
+    % We verify that the last move is valid
+    isValidLastMove(C, XNew, YNew, H), 
+    % We update the history
+    concate(H, [(X, Y), (XNew, YNew)], NewH). 
 
 
-% To make a list of all possible (full) moves from a list of places in the board:
+% To make a list of all possible (full) moves 
+% from a list of places in the board:
 % it is used in the other possibleMoves predicate
 % C: The color of the user
-% Moves: a list with some elements having this strucutre (Xi, Yi, Xc, Yc, H),
-% where (Xi, Yi) is the initial position, where (Xc, Yc) is the current position
-% and H a list containing the path to go to (Xc, Yc) (excluded) from (Xi, Yi),
-% FinalMoves: a list with some elements having this structure (Xi, Yi, Xf, Yf)
-% where (Xi, Yi, Xf, Yf) represents a move from (Xi, Yi) to (Xf, Yf)
-% H: a list with some elements (each element is a list) containing the 
-% corresponding history for each move mentionned above
+% Moves: a list with some elements having 
+% this strucutre (Xi, Yi, Xc, Yc, H),
+% where (Xi, Yi) is the initial position, 
+% where (Xc, Yc) is the current position
+% and H a list containing the path to go 
+% to (Xc, Yc) (excluded) from (Xi, Yi),
+% FinalMoves: a list with some elements having 
+% this structure (Xi, Yi, Xf, Yf)
+% where (Xi, Yi, Xf, Yf) represents a move 
+% from (Xi, Yi) to (Xf, Yf)
+% H: a list with some elements (each element is a list) 
+% containing the corresponding history for each move 
+% mentionned above
 % J: iterator
 % N: To know that we should manage the last move
 possibleMoves(C, Moves, FinalMoves, H, N, N) :-	
@@ -214,16 +226,39 @@ possibleMoves(_, _, [], [], _, _).
 % The goal of this predicate is to separate the moves and
 % the history of each move and make two lists
 % based on this separation
-% It also erase the paths which start at the same place and end at the same place.
 separate5Uples(Moves, FinalMoves, History) :- 
     % Interface: the two temp lists are used to increase efficiency
     separate5Uples(Moves, [], [], FinalMoves, History). 
 separate5Uples([], FinalMoves,  History, FinalMoves, History) :- !.
-separate5Uples([(Xi, Yi, Xf, Yf, H)|QTmpFinalMoves], TmpFinalMoves, TempH, FinalMoves, History) :-	
-    separate5Uples(QTmpFinalMoves, [(Xi, Yi, Xf, Yf)|TmpFinalMoves],  [H|TempH], FinalMoves, History),
+separate5Uples(
+    [(Xi, Yi, Xf, Yf, H)|QTmpFinalMoves], 
+    TmpFinalMoves, 
+    TempH, 
+    FinalMoves, 
+    History
+) :-	
+    separate5Uples(
+        QTmpFinalMoves, 
+        [(Xi, Yi, Xf, Yf)|TmpFinalMoves],  
+        [H|TempH], 
+        FinalMoves, 
+        History
+    ),
     !.
-separate5Uples([_|QTmpFinalMoves], TmpFinalMoves, TempH, FinalMoves, History) :-
-    separate5Uples(QTmpFinalMoves, TmpFinalMoves,  TempH, FinalMoves, History).
+separate5Uples(
+    [_|QTmpFinalMoves], 
+    TmpFinalMoves, 
+    TempH, 
+    FinalMoves, 
+    History
+) :-
+    separate5Uples(
+        QTmpFinalMoves, 
+        TmpFinalMoves,  
+        TempH, 
+        FinalMoves, 
+        History
+    ).
 
 % Predicate to find a way to the opposite Kalista using a list of initial position(s): used by AI.
 % C : color which attacks.
