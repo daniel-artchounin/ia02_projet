@@ -1,5 +1,6 @@
 % *** The predicates below allow us to launch the game. ***
 
+
 % Includes
 :- include('./list.pl').
 :- include('./matrix.pl').
@@ -47,12 +48,14 @@ choice(4) :-    hSep,
                 hSep, 
                 !.
 choice(_) :-    hSep, 
-                write('Veuillez selectionner une option valide.'), hSep, nl,
+                write('Veuillez selectionner une option valide.'), 
+                hSep, 
+                nl,
                 fail.
 
-% To start the game, whether the player is human or IA
-% T1 : Type du premier joueur
-% T2 : Type du deuxième joueur
+% To start the game whether the player is human or not (AI)
+% T1: Type of the first player
+% T2: Type of the second player
 start(T1, T2) :-    % Initialization of the board
                     initBoard(T1), 
                     % The red player/IA sets initial 
@@ -62,12 +65,15 @@ start(T1, T2) :-    % Initialization of the board
                     % position of his pieces                    
                     enterPiecesB(T2, o),                    
                     playerInfo(r, T1),
-                    % The first turn of red player/AI: no need to obey 
-                    % to Khan as it doesn't exist yet
+                    % The first turn of red 
+                    % player (human/AI): 
+                    % no need to obey to Khan
+                    % as it doesn't exist yet
                     playerTurn(r, T1, 2),                   
                     playerInfo(o, T2),
                     printBoard,
-                    % The first turn of ocre player/AI
+                    % The first turn of ocre 
+                    % player (human/IA)
                     playerTurn(o, T2, 1), 
                     % To manage every turn of the game                  
                     turn(T1, T2),                   
@@ -92,10 +98,11 @@ playerTurn(_, _, _) :-  endOfGame, % Game is over.
                         !.
 
 % Basic turn (the game is not finished yet)
-% T : Type of the player (h/m)
+% T: Type of the player (h/m)
 % C: Color of the player (r/o)
 % MoveType: 1 if player should obey to the Khan, 2 otherwise
-playerTurn(C, T, MoveType) :-   nl, % Standard move     
+playerTurn(C, T, MoveType) :-   nl, 
+                                % Standard move     
                                 possibleMoves(M, MoveType, C, _),
                                 % Will be empty if MoveType = 1 and 
                                 % no piece can obey to the Khan
@@ -109,7 +116,7 @@ playerTurn(C, T, MoveType) :-   nl, % Standard move
 playerTurn(C, T, _) :-  % At this point, impossible to obey to the Khan
                         getPieces(P, C),  
                         % Player has already lost a piece :
-                        % Insertion allowed.
+                        % insertion allowed.
                         \+ length(P, 6), 
                         changePositionOrNewSbire(C, T), 
                         !.
