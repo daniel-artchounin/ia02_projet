@@ -12,8 +12,10 @@
 endOfGame :- endOfGameR.
 endOfGame :- endOfGameO.
 
-% To get or to check the position of the kalistas (first position in the dynamic base)
-redKalista(X, Y) :- \+ endOfGameR, % If red player has lost, he has no Kalista anymore
+% To get or to check the position of the kalistas 
+% (first position in the dynamic fact base)
+redKalista(X, Y) :- % If red player has lost, he has no Kalista anymore
+                    \+ endOfGameR, 
                     redAt(X1, Y1), 
                     !, 
                     X = X1, 
@@ -38,7 +40,7 @@ pieceAt(X, Y, o) :- ocreAt(X, Y).
 otherPlayer(r, o).
 otherPlayer(o, r).
 
-% General predicates to insert a new piece / kalista.
+% General predicates to insert a new sbire / kalista.
 sbireAt(X, Y, r) :- assertz(redAt(X, Y)), !.
 sbireAt(X, Y, o) :- assertz(ocreAt(X, Y)), !.
 

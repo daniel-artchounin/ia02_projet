@@ -111,14 +111,8 @@ initBoard(m) :-
 
 
 % We get the type of a place in the board (1, 2 or 3)
-% Use: 
-% | ?- typeOfPlace(6, 1, P).
-% 
-% P = 1
-% 
-% yes
 typeOfPlace(I, J, P) :- board(B),
-                        nth(I, B, Rows),
+                        nth(I, B, Rows), % Build-it predicate
                         nth(J, Rows, P).
 
 % To get the free positions of the board

@@ -91,27 +91,28 @@ turn(T1, T2) :- repeat,
 playerTurn(_, _, _) :-  endOfGame, % Game is over.
                         !.
 
-% Basic turn (the game is not finished)
-% T: type of the player
-% C: color of the player
-% MoveType: 1 if it should obey to the Khan, 2 otherwise
+% Basic turn (the game is not finished yet)
+% T : Type of the player (h/m)
+% C: Color of the player (r/o)
+% MoveType: 1 if player should obey to the Khan, 2 otherwise
 playerTurn(C, T, MoveType) :-   nl, % Standard move     
                                 possibleMoves(M, MoveType, C, _),
                                 % Will be empty if MoveType = 1 and 
                                 % no piece can obey to the Khan
                                 \+ empty(M), 
+                                % Get a move and perform it
                                 handleMoveRequest(T, C, X, Y, XNew, YNew, M), 
                                 writeMove(X, Y, XNew, YNew),
                                 changePiecePosition(X, Y, XNew, YNew, C),
                                 !.
 
-playerTurn(C, T, _) :-  % Impossible to obey to the Khan
+playerTurn(C, T, _) :-  % At this point, impossible to obey to the Khan
                         getPieces(P, C),  
-                        % Player has already lost a piece
+                        % Player has already lost a piece :
+                        % Insertion allowed.
                         \+ length(P, 6), 
-                        % Undefined for the machine.
                         changePositionOrNewSbire(C, T), 
                         !.
 
-playerTurn(C, T, _) :-  % Player has all his pieces.
+playerTurn(C, T, _) :-  % Player has all his pieces, insertion forbidden.
                         managePositionOrNewSbire(1, C, T). 
