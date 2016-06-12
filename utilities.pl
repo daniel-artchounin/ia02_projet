@@ -528,41 +528,55 @@ generateMove(C, Moves, BestMove) :-
     !.
 
 % V. If we get here, there are two possibilities:
-% We are not able to move our kalista, we will probably loose the game, or
-% We don't need to move our kalista (that's cool...)
-% In this case, we try to place a Sbire on a free position which can hit the Kalista in a future turn.
+% We are not able to move our kalista, we will 
+% probably loose the game, or we don't need to move 
+% our kalista (that's cool...)
+% In the last case, we try to place a Sbire on a 
+% free position which can hit the Kalista in a 
+% future turn.
 generateMove(C, Moves, BestMove) :- 
     otherPlayer(C, C2),
     getPieces(C2Pieces, C2),
     kalista(XK, YK, C),
-    getElement(Moves, (Xi, Yi, XDest, YDest)), % We get a move
-    \+ getElement([(XK, YK)], (Xi, Yi)), % We tend to not move our kalista
-    \+ getElement(C2Pieces, (XDest, YDest)), % We will try to not hit an opposite sbire
-    % We look if it's possible for us to hit the opposite kalista quickly
+    % We get a move
+    getElement(Moves, (Xi, Yi, XDest, YDest)), 
+    % We tend to not move our kalista
+    \+ getElement([(XK, YK)], (Xi, Yi)), 
+    % We will try to not hit an opposite sbire
+    \+ getElement(C2Pieces, (XDest, YDest)), 
+    % We look if it's possible for us to hit 
+    % the opposite kalista quickly
     findMoveToKalista([(XDest, YDest)], _, _, C), 
-    % If we move, we hope that Kalista won't be in danger next move.
+    % If we move, we hope that Kalista won't be 
+    % in danger next move.
     \+ isMoveDangerous((Xi, Yi, XDest, YDest), C), 
     BestMove = (Xi, Yi, XDest, YDest),
     nl, write('Care.'), nl, 
     !.
 
-% VI. We can't efficiently place our sbire, so we will move a sbire without hitting an opposite sbire.
-% Here we start to generate the least bad move. We don't want the other player to disobey to the Khan.
+% VI. We can't efficiently place our sbire, so we will 
+% try to move a sbire without hitting an opposite sbire.
+% Here, we start to generate the least bad move. We 
+% don't want the other player to disobey to the Khan.
 generateMove(C, Moves, BestMove) :- 
     otherPlayer(C, C2),
     getPieces(C2Pieces, C2),
     kalista(XK, YK, C),
     setof(
-        [D, Xi, Yi, XDest, YDest], % All moves having these properties
+        % All moves having these properties
+        [D, Xi, Yi, XDest, YDest], 
         (
-            getElement(Moves, (Xi, Yi, XDest, YDest)), % We get a move
+            % We get a move
+            getElement(Moves, (Xi, Yi, XDest, YDest)), 
             % We tend to not move our kalista
             \+ getElement([(XK, YK)], (Xi, Yi)), 
             % We will try to not hit an opposite sbire
             \+ getElement(C2Pieces, (XDest, YDest)), 
-            % If we move, we hope that Kalista won't be in danger next move.
+            % If we move, we hope that Kalista won't 
+            % be in danger next move.
             \+ isMoveDangerous((Xi, Yi, XDest, YDest), C), 
-            % The other player has case of the same type as our destination.
+            % The other player has at least a piece on the 
+            % same type of place as our destination.
             hasSbireSameType(XDest, YDest, C), 
             % Calculate distance to opposite Kalista
             distanceToKalista(XDest, YDest, C2, D) 
@@ -571,119 +585,151 @@ generateMove(C, Moves, BestMove) :-
     ),
     minimumFirstSubList(L, [D, Xi, Yi, XDest, YDest]),
     BestMove = (Xi, Yi, XDest, YDest), 
-    nl, write('We\'ll just get closer.'), nl, 
+    nl, 
+    write('We\'ll just get closer.'), 
+    nl, 
     !.
 
-% VII. At this point, we can't move a sbire 
-% to a free position without letting 
-% the other player disobey to the Khan.
-% So we will hit an opposite sbire. 
-% In spite of everything we try to take 
-% an opposite sbire which brings us 
-% closer to the opposite Kalista.
+% VII. At this point, we can't move a sbire to a free 
+% position without letting the other player disobey 
+% to the Khan. So we will hit an opposite sbire. 
+% Nevertheless, we try to take an opposite sbire 
+% which brings us closer to the opposite Kalista.
 generateMove(C, Moves, BestMove) :- 
     otherPlayer(C, C2),
     getPieces(C2Pieces, C2),
     kalista(XK, YK, C), 
-    getElement(Moves, (Xi, Yi, XDest, YDest)), % We get a move
-    \+ getElement([(XK, YK)], (Xi, Yi)), % We tend to not move our kalista
-    element((XDest, YDest), C2Pieces), % Will we hit an opposite sbire ?
-    % We look if it's possible for us to hit the opposite kalista quickly
+    % We get a move
+    getElement(Moves, (Xi, Yi, XDest, YDest)), 
+    % We tend to not move our kalista
+    \+ getElement([(XK, YK)], (Xi, Yi)), 
+    % Will we hit an opposite sbire ?
+    element((XDest, YDest), C2Pieces), 
+    % We look if it's possible for us to hit the 
+    % opposite kalista quickly
     findMoveToKalista([(XDest, YDest)], _, _, C), 
-    % If we move, we hope that Kalista won't be in danger next move.
+    % If we move, we hope that Kalista won't be 
+    % in danger next move.
     \+ isMoveDangerous((Xi, Yi, XDest, YDest), C), 
     BestMove = (Xi, Yi, XDest, YDest), 
     nl, write('Eaten for a good reason.'), nl,
     !.
 
-% VIII. We can't take a sbire which brings us close to Kalista or move to a free position.
-% So we perform the first possible move (of a sbire) making the other player obey to Khan.
+% VIII. We can't take a sbire which brings us close
+% to the Kalista or move to a free position. So, we 
+% perform the first possible move (of a sbire) making 
+% the other player obey to Khan.
 generateMove(C, Moves, BestMove) :- 
     first(Moves, BestMove),
     getElement(Moves, (Xi, Yi, XDest, YDest)),
     kalista(XK, YK, C),
-    \+ getElement([(XK, YK)], (Xi, Yi)), % We tend to not move our kalista
+    % We tend to not move our kalista
+    \+ getElement([(XK, YK)], (Xi, Yi)), 
     hasSbireSameType(XDest, YDest, C),
-    % If we move, we hope that Kalista won't be in danger next move.
+    % If we move, we hope that Kalista 
+    % won't be in danger next move.
     \+ isMoveDangerous((Xi, Yi, XDest, YDest), C), 
     BestMove = (Xi, Yi, XDest, YDest),
     nl, write('You shall obey to Khan.'), nl,
     !.
 
-% IX. We move a sbire on a free position. At this point we know that our fellow will disobey to Khan.
+% IX. We move a sbire on a free position. At this point,
+% we know that our fellow will disobey to Khan.
 generateMove(C, Moves, BestMove) :- 
     kalista(XK, YK, C), 
     otherPlayer(C, C2),
     getPieces(C2Pieces, C2),
-    getElement(Moves, (Xi, Yi, XDest, YDest)), % We get a move
+    % We get a move
+    getElement(Moves, (Xi, Yi, XDest, YDest)), 
     % We tend to not move our kalista
     \+ getElement([(XK, YK)], (Xi, Yi)), 
     % We will try to not hit an opposite sbire  
     \+ getElement(C2Pieces, (XDest, YDest)), 
-    % If we move, we hope that Kalista won't be in danger next move.
+    % If we move, we hope that Kalista 
+    % won't be in danger next move.
     \+ isMoveDangerous((Xi, Yi, XDest, YDest), C), 
     BestMove = (Xi, Yi, XDest, YDest), 
     nl, write('You may disobey to Khan.'), nl, 
     !.
 
-% X. Well, we'll hit an opposite sbire without reward. Maybe next time ?
+% X. Well, we'll hit an opposite sbire without 
+% reward for the next player. Maybe next time ?
 generateMove(C, Moves, BestMove) :- 
     kalista(XK, YK, C), 
-    getElement(Moves, (Xi, Yi, XDest, YDest)), % We get a move
-    \+ getElement([(XK, YK)], (Xi, Yi)), % We tend to not move our kalista  
-    % We know that it's not possible to not hit an opposite sbire
-    % We know that it's not possible for us to hit the opposite kalista quickly
-    % If we move, we hope that Kalista won't be in danger next move.
+    % We get a move
+    getElement(Moves, (Xi, Yi, XDest, YDest)),
+    % We tend to not move our kalista 
+    \+ getElement([(XK, YK)], (Xi, Yi)),   
+    % We know that it's not possible to not 
+    % hit an opposite sbire We know that it's 
+    % not possible for us to hit the opposite 
+    % kalista quickly. If we move, we hope that
+    % Kalista won't be in danger next move.
     \+ isMoveDangerous((Xi, Yi, XDest, YDest), C), 
     BestMove = (Xi, Yi, XDest, YDest), 
     nl, write('I\'m just angry.'), nl, 
     !.
 
-% XI. If we are here, it means that we must move our kalista 
-% (there is no other possibility)
+% XI. If we are here, it means that we must move 
+% our kalista (there is no other possibility)
 % Consequently, we will try to move our Kalista 
-% at a global safe place (no care of the type 
-% of the Khan) 
-% without eating a sbire.
+% at a global safe place (no care about Khan's 
+% type of place) without eating a sbire.
 generateMove(C, Moves, BestMove) :- 
     otherPlayer(C, C2),
     getPieces(C2Pieces, C2),
     kalista(XK, YK, C), 
-    getElement(Moves, (XK, YK, XDest, YDest)), % We get a move
+    % We get a move
+    getElement(Moves, (XK, YK, XDest, YDest)), 
     % We will try to not hit an opposite sbire  
     \+ getElement(C2Pieces, (XDest, YDest)), 
     possibleMoves(F2, 2, C2, _),
-    % Then, we check if the other player can hit our kalista quickly
-    \+ element((_, _, XDest, YDest), F2), 
-    BestMove = (XK, YK, XDest, YDest), % If it's not the case, we will move our kalista
+    % Then, we check if the other player can hit 
+    % our kalista quickly
+    \+ element((_, _, XDest, YDest), F2),
+    % If it's not the case, we will move our kalista 
+    BestMove = (XK, YK, XDest, YDest), 
     nl, write('The Kalista moves far away.'), nl, 
     !.
 
 % XII. It's not possible to move our Kalista 
-% at a safe place not only for the next turn
+% at a safe place not only for the next turn.
 % Consequently, we will try to move our Kalista 
-% at a safe place only for the next turn without eating a sbire.
+% at a safe place only for the next turn without 
+% eating a sbire.
 generateMove(C, Moves, BestMove) :- 
     otherPlayer(C, C2),
     getPieces(C2Pieces, C2),
     kalista(XK, YK, C), 
-    getElement(Moves, (XK, YK, XDest, YDest)), % We get a move
-    \+ getElement(C2Pieces, (XDest, YDest)), % We will try to not hit an opposite sbire 
-    \+ isMoveDangerous((XK, YK, XDest, YDest), C), % We check that the player won't be able to take our Kalista next turn
-    BestMove = (XK, YK, XDest, YDest), % If it's not the case, we will move our kalistha
+    % We get a move
+    getElement(Moves, (XK, YK, XDest, YDest)), 
+    % We will try to not hit an opposite sbire 
+    \+ getElement(C2Pieces, (XDest, YDest)), 
+    % We check that the player won't be able 
+    % to take our Kalista next turn
+    \+ isMoveDangerous((XK, YK, XDest, YDest), C), 
+    % If it's not the case, we will move our Kalista
+    BestMove = (XK, YK, XDest, YDest), 
     nl, write('The Kalista is afraid.'), nl, 
     !.
 
-% XIII. We can't move our Kalista without taking a sbire, so we take one.
+% XIII. We can't move our Kalista without 
+% taking a sbire, so we take one.
 generateMove(C, Moves, BestMove) :- 
     kalista(XK, YK, C), 
-    getElement(Moves, (XK, YK, XDest, YDest)), % We get a move
-    BestMove = (XK, YK, XDest, YDest), % If it's not the case, we will move our kalistha
-    nl, write('The Kalista is confused.'), nl, 
+     % We get a move
+    getElement(Moves, (XK, YK, XDest, YDest)),
+    BestMove = (XK, YK, XDest, YDest), 
+    nl, 
+    write('The Kalista is confused.'), 
+    nl, 
     !.
 
 % XIV. Damn. We really don't know what to do. 
-% So we randomly perform the first possible move.
+% So we randomly perform the first possible 
+% move.
 generateMove(_, Moves, BestMove) :- 
     first(Moves, BestMove),
-    nl, write('Randomness.'), nl.
+    nl, 
+    write('Randomness.'), 
+    nl.
