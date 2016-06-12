@@ -275,7 +275,7 @@ findMoveToKalista([_|T], X1, Y1, C) :-      findMoveToKalista(T, X1, Y1, C).
 % and throw all those which don't lead to the position specified by (X, Y).
 filterHistoryToPos([], [], _, _) :- !. % End of history
 filterHistoryToPos([H|T], [HF|P], X, Y) :-  
-    flatten(H, HF),
+    flat(H, HF),
     myLast((X, Y), H), 
     filterHistoryToPos(T, P, X, Y),
     !. % Way found
@@ -405,7 +405,7 @@ generateMove(C, Moves, BestMove) :-
     possibleMoves(_, 2, C2, H), % We get all his possible moves AND moves history
     kalista(XK, YK, C), % What is the exact position of our Kalista ?
     filterHistoryToPos(H, R, XK, YK), % Which positions are part of moves which go to our Kalista ?
-    flatten(R, R2), % All positions in a non-nested list
+    flat(R, R2), % All positions in a non-nested list
     getElement(Moves, (XF, YF, XT, YT)), % We get a possible move 
     % that we can perform (backtracking will try several positions)
     XF \= XK,

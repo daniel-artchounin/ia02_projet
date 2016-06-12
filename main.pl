@@ -76,6 +76,7 @@ start(T1, T2) :-    % Initialization of the board
 
 % To manage turns until the end of the game.
 turn(T1, T2) :- repeat,
+                sleep(2),
                 printBoard,
                 playerInfo(r, T1),
                 playerTurn(r, T1, 1), % Red player turn

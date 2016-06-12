@@ -125,3 +125,15 @@ intersection([H|T], L, [H|R]) :-    element(H, L),
                                     intersection(T, L, R), !.
 intersection([H|T], L, R) :-    \+element(H, L), 
                                 intersection(T, L, R).
+                                
+% flatten L in Res 
+% [1, 3, [5, [6, 7]]] -> [1, 3, 5, 6, 7]
+% 
+% [1, 2, [3]] -> [1, 2, 3]
+% [[1, 2, [3, 4]], [3, 5]]] -> [1, 2, 3, 4, 3, 5]
+% [[1, 3], 5] - [[[1, 3], 5] /!\ returns True
+flat([], []).
+flat([[T|Q1]|Q2], Res) :-	flat([T|Q1], Q1Res), 
+							flat(Q2, Q2Res), 
+							concate(Q1Res, Q2Res, Res), !.
+flat([T|Q], [T|Res]) :- 	flat(Q, Res).
