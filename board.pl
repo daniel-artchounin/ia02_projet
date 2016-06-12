@@ -112,15 +112,18 @@ initBoard(m) :-
 
 % We get the type of a place in the board (1, 2 or 3)
 typeOfPlace(I, J, P) :- board(B),
-                        nth(I, B, Rows), % Build-it predicate
-                        nth(J, Rows, P).
+                        nth(I, B, Rows), % Build-in predicate
+                        nth(J, Rows, P). % Build-in predicate
 
-% To get the free positions of the board
+% To get the free positions of a line of the board
+% (used in 'freePosition' predicate)
 freePosition1D(X, Y, X, Y) :-   Y =< 6, 
                                 \+ pieceAt(X, Y).
 freePosition1D(X, Y, X1, X2) :- Y =< 6, 
                                 YNew is Y + 1, 
                                 freePosition1D(X, YNew, X1, X2).
+                     
+% To get the free positions of the board           
 freePosition(X, Y, X1, X2) :-   X =< 6, 
                                 freePosition1D(X, Y, X1, X2).
 freePosition(X, Y, X1, X2) :-   X =< 6, 
